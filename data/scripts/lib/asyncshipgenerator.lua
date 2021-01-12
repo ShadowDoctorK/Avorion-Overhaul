@@ -1,5 +1,7 @@
 local Log = include("SDKDebugLogging")
 local Rand = include("SDKUtilityRandom")
+local ShipClass_Default = include("ship_classes/default")
+local ShipClass_Carrier = include("ship_classes/carrier")
 
 local _ModName = "Async Ship Generator"
 
@@ -13,6 +15,8 @@ local _Debug = 0
 ----------------------------------------------------------------------------------------------------------
 ----------------------------------------- Added Funcitons ------------------------------------------------
 ----------------------------------------------------------------------------------------------------------
+
+AsyncShipGenerator.ShipClasses = {}
 
 AsyncShipGenerator.VolumeShips = {}
 AsyncShipGenerator.VolumeShips[1]  = 1       -- Slot 1
@@ -132,6 +136,53 @@ function AsyncShipGenerator:createCustomMilitaryShip(faction, position, volume)
     
     PlanGenerator.makeAsyncShipPlan("_ship_generator_on_military_plan_generated", {self.generatorId, position, faction.index}, faction, volume)
     self:shipCreationStarted()
+end
+
+function AsyncShipGenerator:createShipByClass(shipClass, faction, position, volume, params)
+    local _MethodName = GetName("createShipByClass")
+    Log.Debug(_MethodName, "Creating Ship Of Class: " .. tostring(shipClass), _Debug)
+
+    -- Grab the set if functions dynamically from our list
+    local shipClass = AsyncShipGenerator.ShipClasses[shipClass] or nil
+    
+    --If that ship class was not in the list then create a default ship
+    if shipClass == nil then 
+        Log.Debug(_MethodName, "Ship Class Not Found: " .. tostring(shipClass), _Debug)
+        AsyncShipGenerator:createShip(faction, position, volume)
+        return
+    end
+
+    Log.Debug(_MethodName, "Ship Class Found: " .. tostring(shipClass), _Debug)
+    --If we do have our ShipClass functions then use it
+    shipClass.start(self.generatorId,faction,position,volume, params or {})
+
+    self:shipCreationStarted()
+end
+
+local function onShipByClassPlanFinished(plan, generatorId, position, factionIndex, shipClass, params)
+    local self = generators[generatorId] or {}
+
+    local _MethodName = GetName("onShipByClassPlanFinished")
+    Log.Debug(_MethodName, "Plan Finished For Ship Of Class: " .. tostring(shipClass), _Debug)
+    
+    -- If we are in the callback and then the ship class must exist -- or else we wouldn't have gotten here
+    local shipClass = AsyncShipGenerator.ShipClasses[shipClass]
+
+    if self.scaling then
+        plan:scale(vec3(self.scaling))
+    end
+
+    local faction = Faction(self.factionIndex or factionIndex)
+    local ship = Sector():createShip(faction, "", plan, position, self.arrivalType)
+
+    shipClass.addTurretsAndEquipment(ship, params)
+    shipClass.addScripts(ship, params)
+    shipClass.setValues(ship, params)
+    shipClass.finalize(ship, params)
+
+    Log.Debug(_MethodName, "Ship Of Class: " .. tostring(shipClass) .. "Completed", _Debug)
+
+    onShipCreated(generatorId, ship)
 end
 
 ----------------------------------------------------------------------------------------------------------
@@ -674,6 +725,25 @@ function AsyncShipGenerator:tryBatchCallback()
     end
 
 end
+]]
+
+local old_new = new
+local function new(namespace, onGeneratedCallback)
+    local rtn = old_new(namespace, onGeneratedCallback)
+
+    ShipClass_Default:init(AsyncShipGenerator.ShipClasses)
+    ShipClass_Carrier:init(AsyncShipGenerator.ShipClasses)
+    
+    if namespace then
+        namespace._ship_generator_on_ship_by_class_plan_generated = onShipByClassPlanFinished
+    else
+        _ship_generator_on_ship_by_class_plan_generated = onShipByClassPlanFinished
+    end
+
+    return rtn
+end
+--[[
+
 
 local function new(namespace, onGeneratedCallback)
     local instance = {}
