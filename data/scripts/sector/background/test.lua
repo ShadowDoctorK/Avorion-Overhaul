@@ -1,7 +1,7 @@
 package.path = package.path .. ";data/scripts/?.lua"
 package.path = package.path .. ";data/scripts/lib/?.lua"
 
-local AsyncShipGenerator = include ("asyncshipgenerator")
+local AsyncFleetGenerator = include("asyncfleetgenerator")
 local Placer = include ("placer")
 local SpawnUtility = include("spawnutility")
 
@@ -29,41 +29,52 @@ end
 
 
 
-function Test.getUpdateInterval()
-    return 15
-end
+-- function Test.getUpdateInterval()
+--     return 10
+-- end
 
 -- function Test.onRestoredFromDisk(time)
 --     Test.updateServer(time)
 -- end
 
-
 function Test.initialize()
-    -- if onServer() then
-    --     Sector():registerCallback("onRestoredFromDisk", "onRestoredFromDisk")
-    -- end
-end
+    if onServer() then
+        
+        print("Test Spawn: Starting Initialize")
 
+        local resolveIntersections = function(ships)
+            Placer.resolveIntersections(ships)
+            print("Test Spawn: Final Callback") 
+        end
 
-function Test.updateServer(timeStep)
-    print("Test Spawn: Starting Update Tick")
+        local eachShipCallback = function(ship)
+            ship:addScriptOnce("ai/patrol.lua")
+            print("Test Spawn: Callback For Ship -" .. tostring(ship.name)) 
+        end
+    
+        
+        local dir = random():getDirection()
+        local matrix = MatrixLookUpPosition(-dir, vec3(0,1,0), dir * 2000)
+        local faction = Galaxy():getNearestFaction(Sector():getCoordinates())
+        
 
-    local resolveIntersections = function(ships)
-        Placer.resolveIntersections(ships)
-        print("Test Spawn: Callback Hit") 
+        -- local generator = AsyncFleetGenerator(Test, resolveIntersections ,{"Default","Carrier","Defender"})
+        local generator = AsyncFleetGenerator(Test, resolveIntersections ,{
+            "Blocker","Carrier","CIWS","Default","Defender","Disrupter","Flagship","Freighter","Miner","Persecutor","Torpedo","Tradeship"
+        })
+
+        -- generator:queueShip("Miner", faction, matrix, 5000, { } , eachShipCallback)
+        -- generator:queueShip("Defender", faction, matrix, 5000, { volumeAmp = 7.5, damageAmp = 20 } , eachShipCallback)
+        -- generator:queueShip("Carrier", faction, matrix, 10000, { fighters = 21 } , eachShipCallback)
+
+        generator:queueRandomShips(5, faction, matrix, nil, { } , eachShipCallback)
+        -- generator:queueRandomShips(5, faction, matrix, 10000, { fighters = 21, damageAmp = 10 } , eachShipCallback)
+
+        generator:Build()        
     end
-
-    local generator = AsyncShipGenerator(Test, resolveIntersections)
-
-    local dir = random():getDirection()
-    local matrix = MatrixLookUpPosition(-dir, vec3(0,1,0), dir * 2000)
-
-    local faction = Galaxy():getNearestFaction(Sector():getCoordinates())
-
-
-    generator:startBatch()
-    generator:createShipByClass("Default", faction, matrix)
-    generator:createShipByClass("Carrier", faction, matrix, nil, { fighters = 21 } )
-    generator:endBatch()
-
 end
+
+
+-- function Test.updateServer(timeStep)
+
+-- end

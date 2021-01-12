@@ -9,8 +9,8 @@ local PlanGenerator = include ("plangenerator")
 local ShipUtility = include ("shiputility")
 local SectorFighterGenerator = include("sectorfightergenerator")
 
-local ShipClass_Carrier = {}
-local ClassName = "Carrier" --this should match the line above
+local ShipClass_Blocker = {}
+local ClassName = "Blocker" --this should match the line above
 
 -- See ship_classes/default.lua for more details
 
@@ -18,27 +18,27 @@ local ClassName = "Carrier" --this should match the line above
 --[[
 
     {
-        fighters = int
+        volumeAmp = int,
+        damageAmp = int
     }
 
 ]] 
 
 local function start(generatorId, faction, position, volume, params)
     position = position or Matrix()
-    volume = volume or Balancing_GetSectorShipVolume(Sector():getCoordinates()) * 15.0
+    volume = volume or Balancing_GetSectorShipVolume(Sector():getCoordinates()) * (params.volumeAmp or 1)
     
     -- Keep the function name the same -- Defined in asynshipgenerator.lua
-    PlanGenerator.makeAsyncCarrierPlan("_ship_generator_on_ship_by_class_plan_generated", {generatorId, position, faction.index, ClassName, params}, faction, volume)
+    PlanGenerator.makeAsyncShipPlan("_ship_generator_on_ship_by_class_plan_generated", {generatorId, position, faction.index, ClassName, params}, faction, volume)
 end
 
 local function addTurretsAndEquipment(ship, params)
-    fighters = params.fighters or 10
-    ShipUtility.addCarrierEquipment(ship, fighters)
+    ShipUtility.addBlockerEquipment(ship)
+    ship.damageMultiplier = ship.damageMultiplier * (params.damageAmp or 1)
 end
 
 local function addScripts(ship, params)
     AddDefaultShipScripts(ship)
-    ship:addScriptOnce("ai/patrol.lua")
 end
 
 local function setValues(ship, params)
@@ -48,13 +48,13 @@ end
 local function finalize(ship, params)
     ship.crew = ship.minCrew
     ship.shieldDurability = ship.shieldMaxDurability
-
+    
     SetBoardingDefenseLevel(ship)
 end
 
 
 -- Add the Ship Class to a list on the asynshipgenerator  script so the classes can be called dynamically
-function ShipClass_Carrier:init(ShipClasses)
+function ShipClass_Blocker:init(ShipClasses)
     ShipClasses[ClassName] = {
         start = start,
         addTurretsAndEquipment = addTurretsAndEquipment,
@@ -64,4 +64,4 @@ function ShipClass_Carrier:init(ShipClasses)
     }
 end
 
-return ShipClass_Carrier
+return ShipClass_Blocker
