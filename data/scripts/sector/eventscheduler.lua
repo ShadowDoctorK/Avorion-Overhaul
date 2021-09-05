@@ -12,6 +12,8 @@ local events = {}
 
 SectorEvents = {}
 ]]
+
+-- Reduced the frequency of Pirate Attacks (30 - 60 mins)
 if onServer() then
 
     function SectorEvents.addEvent(name, frequency)

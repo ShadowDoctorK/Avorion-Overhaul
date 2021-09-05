@@ -277,7 +277,7 @@ if onServer() then
 
         boss.title = "#*/S46B 6S2O 4I49/+"%_T
         boss.name = ""
-        boss.crew = boss.minCrew
+        boss.crew = boss.idealCrew
         boss:addScriptOnce("story/corruptedaibehaviour")
         boss:addScriptOnce("story/aicorrupteddialog")
         boss:addScriptOnce("deleteonplayersleft")

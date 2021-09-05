@@ -6,6 +6,7 @@ include ("galaxy")
 include ("stringutility")
 include ("randomext")
 include ("utility")
+include ("defaultscripts")
 local PlanGenerator = include ("plangenerator")
 local ShipUtility = include ("shiputility")
 local SectorTurretGenerator = include ("sectorturretgenerator")
@@ -170,12 +171,13 @@ end
 -- due to the "breeding ground" effect.
 -- You can pass it a class and a X,Y to override the default
 -- Chance Auto Adjusts based on the distance from the core.
-function SDKXsotanGenerator.ClassByDistance(_Class, _X, _Y) local _MethodName = GetName("Class By Distance")
+function SDKXsotanGenerator.ClassByDistance(_Class, _X, _Y, _Overrides) local _MethodName = GetName("Class By Distance")
 
     local _Random = Random(Seed(os.time() + 4872))
     local _Selected = _Random:getInt(1, 10000) / 100
     local _Distance = SDKXsotanGenerator.DistanceFromCore(_X, _Y)
-    local _UseTable = true
+
+    local _UseTable = true if _Class ~= nil then _UseTable = false end
     
     local C1 = 0        -- Probes
     local C2 = 0        -- Latchers
@@ -199,7 +201,7 @@ function SDKXsotanGenerator.ClassByDistance(_Class, _X, _Y) local _MethodName = 
         end
     end        
 
-    -- Xsotan are have grown more near the core where they breached the galaxy
+    -- Xsotan have grown more near the core where they breached the galaxy
     -- and are flooding in. They are less devloped at the outer edges of the galaxy
     -- so you should only see larger classes as you move to the center.
     -- Other classes wont be missed because they will be used by the summoner, reclaimer,
@@ -292,6 +294,31 @@ function SDKXsotanGenerator.Faction()
 
     return faction
 
+end
+
+--[[
+    Function used to make the Xsotan go to war with all factions but the Player in 
+    the target sector the script is running in.
+]]
+function SDKXsotanGenerator.HateAll()
+    local _Galaxy = Galaxy()
+    local _Sector = Sector()
+    local _Xsotan = SDKXsotanGenerator.Faction()
+
+    -- worsen relations to all present players and alliances
+    local _Factions = {_Sector:getPresentFactions()}
+    for _, _Index in pairs(_Factions) do
+        local _Faction = Faction(_Index)
+        if _Faction then
+            if _Faction.isAIFaction then
+                _Galaxy:setFactionRelations(_Xsotan, _Faction, -100000)
+                _Galaxy:setFactionRelationStatus(_Xsotan, _Faction, RelationStatus.War)
+            else -- Player
+                _Galaxy:setFactionRelations(_Xsotan, _Faction, 0, false, false)
+                _Galaxy:setFactionRelationStatus(_Xsotan, _Faction, RelationStatus.Neutral, false, false)
+            end
+        end
+    end
 end
 
 function SDKXsotanGenerator.GrowthPrefix(_Volume, _VolLow, _VolHigh) local _MethodName = GetName("Growth Prefix")
@@ -658,7 +685,7 @@ if onServer() then
         ShipUtility.addTurretsToCraft(_Ship, turret, 1)
     
         _Ship:setTitle("${toughness}"%_T .. _Prefix .. "${name}"%_T, {toughness = "", name = _Name})
-        _Ship.crew = _Ship.minCrew
+        _Ship.crew = _Ship.idealCrew
         _Ship.shieldDurability = _Ship.shieldMaxDurability
     
         AddDefaultShipScripts(_Ship)
@@ -708,7 +735,7 @@ if onServer() then
         ShipUtility.addTurretsToCraft(_Ship, SDKXsotanGenerator.LatcherTeslaTurret(), 4, 4)
     
         _Ship:setTitle("${toughness}"%_T .. _Prefix .. "${name}"%_T, {toughness = "", name = _Name})
-        _Ship.crew = _Ship.minCrew
+        _Ship.crew = _Ship.idealCrew
         _Ship.shieldDurability = _Ship.shieldMaxDurability
     
         AddDefaultShipScripts(_Ship)
@@ -761,7 +788,7 @@ if onServer() then
         ShipUtility.addTurretsToCraft(_Ship, turret, 1)
     
         _Ship:setTitle("${toughness}"%_T .. _Prefix .. "${name}"%_T, {toughness = "", name = _Name})
-        _Ship.crew = _Ship.minCrew
+        _Ship.crew = _Ship.idealCrew
         _Ship.shieldDurability = _Ship.shieldMaxDurability
     
         AddDefaultShipScripts(_Ship)
@@ -815,7 +842,7 @@ if onServer() then
         ShipUtility.addTurretsToCraft(_Ship, turret, numTurrets)
     
         _Ship:setTitle("${toughness}"%_T .. _Prefix .. _Quantum .. "${name}"%_T, {toughness = "", name = _Name})
-        _Ship.crew = _Ship.minCrew
+        _Ship.crew = _Ship.idealCrew
         _Ship.shieldDurability = _Ship.shieldMaxDurability
     
         AddDefaultShipScripts(_Ship)
@@ -870,7 +897,7 @@ if onServer() then
         ShipUtility.addTurretsToCraft(_Ship, turret, numTurrets)
     
         _Ship:setTitle("${toughness}"%_T .. _Prefix .. _Quantum .. "${name}"%_T, {toughness = "", name = _Name})
-        _Ship.crew = _Ship.minCrew
+        _Ship.crew = _Ship.idealCrew
         _Ship.shieldDurability = _Ship.shieldMaxDurability
     
         AddDefaultShipScripts(_Ship)
@@ -926,7 +953,7 @@ if onServer() then
         ShipUtility.addTurretsToCraft(_Ship, turret, numTurrets)
     
         _Ship:setTitle("${toughness}"%_T .. _Prefix .. _Quantum .. "${name}"%_T, {toughness = "", name = _Name})
-        _Ship.crew = _Ship.minCrew
+        _Ship.crew = _Ship.idealCrew
         _Ship.shieldDurability = _Ship.shieldMaxDurability
     
         AddDefaultShipScripts(_Ship)
@@ -981,7 +1008,7 @@ if onServer() then
         ShipUtility.addTurretsToCraft(_Ship, turret, numTurrets)
     
         _Ship:setTitle("${toughness}"%_T .. _Prefix .. _Quantum .. "${name}"%_T, {toughness = "", name = _Name})
-        _Ship.crew = _Ship.minCrew
+        _Ship.crew = _Ship.idealCrew
         _Ship.shieldDurability = _Ship.shieldMaxDurability
     
         AddDefaultShipScripts(_Ship)
@@ -1036,7 +1063,7 @@ if onServer() then
         ShipUtility.addTurretsToCraft(_Ship, turret, numTurrets)
     
         _Ship:setTitle("${toughness}"%_T .. _Prefix .. _Quantum .. "${name}"%_T, {toughness = "", name = _Name})
-        _Ship.crew = _Ship.minCrew
+        _Ship.crew = _Ship.idealCrew
         _Ship.shieldDurability = _Ship.shieldMaxDurability
     
         AddDefaultShipScripts(_Ship)
@@ -1115,7 +1142,7 @@ if onServer() then
         ShipUtility.addTurretsToCraft(_Ship, turret, numTurrets)
     
         _Ship:setTitle("${toughness}"%_T .. _Prefix .. _Quantum .. "${name}"%_T, {toughness = "", name = _Name})
-        _Ship.crew = _Ship.minCrew
+        _Ship.crew = _Ship.idealCrew
         _Ship.shieldDurability = _Ship.shieldMaxDurability
     
         AddDefaultShipScripts(_Ship)
@@ -1172,7 +1199,7 @@ if onServer() then
         ShipUtility.addTurretsToCraft(_Ship, SDKXsotanGenerator.RailgunTurret(), numTurrets, numTurrets)
     
         _Ship:setTitle("${toughness}"%_T .. _Prefix .. "${name}"%_T, {toughness = "", name = _Name})
-        _Ship.crew = _Ship.minCrew
+        _Ship.crew = _Ship.idealCrew
         _Ship.shieldDurability = _Ship.shieldMaxDurability
     
         AddDefaultShipScripts(_Ship)
@@ -1219,7 +1246,7 @@ if onServer() then
         ShipUtility.addBossAntiTorpedoEquipment(_Ship)
     
         _Ship:setTitle("${toughness} ${name}"%_T, {toughness = "", name = "Wormhole Guardian Prototype"})    
-        _Ship.crew = _Ship.minCrew
+        _Ship.crew = _Ship.idealCrew
         _Ship.shieldDurability = _Ship.shieldMaxDurability
     
         AddDefaultShipScripts(_Ship)
@@ -1268,7 +1295,7 @@ if onServer() then
         ShipUtility.addBossAntiTorpedoEquipment(_Ship)
     
         _Ship:setTitle("${toughness} ${name}"%_T, {toughness = "", name = "Wormhole Guardian"})    
-        _Ship.crew = _Ship.minCrew
+        _Ship.crew = _Ship.idealCrew
         _Ship.shieldDurability = _Ship.shieldMaxDurability
     
         local upgrades =

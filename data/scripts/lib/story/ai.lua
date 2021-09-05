@@ -96,7 +96,7 @@ function AI.spawn(x, y)
     boss.shieldDurability = boss.shieldMaxDurability
     boss.title = "The AI"%_T
     boss.name = ""
-    boss.crew = boss.minCrew
+    boss.crew = boss.idealCrew
     boss:addScriptOnce("story/aibehaviour")
     boss:addScriptOnce("story/aidialog")
     boss:addScriptOnce("deleteonplayersleft")

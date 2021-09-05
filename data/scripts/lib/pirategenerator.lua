@@ -42,7 +42,7 @@ function PirateGenerator.create(position, volumeFactor, title)
 
     PirateGenerator.addPirateEquipment(ship, title)
 
-    ship.crew = ship.minCrew
+    ship.crew = ship.idealCrew
     ship.shieldDurability = ship.shieldMaxDurability
 
     return ship

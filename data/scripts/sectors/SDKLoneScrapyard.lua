@@ -97,6 +97,7 @@ function SectorTemplate.generate(player, seed, x, y)
 
     Sector():addScriptOnce("data/scripts/sector/eventscheduler.lua", "events/pirateattack.lua")
     Sector():addScriptOnce("data/scripts/sector/SDKScrapyardExtension.lua")
+    Sector():addScriptOnce("data/scripts/sector/SDKBackgroundSectorManager.lua")
 
     generator:addAmbientEvents()
     Placer.resolveIntersections()

@@ -121,7 +121,7 @@ Swoks.old_spawn = Swoks.spawn function Swoks.spawn(player, x, y)
         -- Set Up Basic Stuff Missed Since We Didn't Use The Pirate Generator
         _Boss = Sector():createShip(_Faction, "", _Plan, piratePosition())
         PirateGenerator.addPirateEquipment(_Boss, "Pirate Mothership")
-        _Boss.crew = _Boss.minCrew
+        _Boss.crew = _Boss.idealCrew
         _Boss.shieldDurability = _Boss.shieldMaxDurability
         ShipUtility.addArmedTurretsToCraft(_Boss, Swoks.TotalTurrets())
         --broadcastInvokeClientFunction("UpdateIcon", _Boss)    

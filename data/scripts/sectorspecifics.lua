@@ -16,7 +16,7 @@ function SectorSpecifics:addTemplates()
     self:addMoreTemplates()
 
     -- Add Custom Sectors
-    self:addTemplate("sectors/SDKlonescrapyard")
+    self:addTemplate("sectors/SDKLoneScrapyard")
     self:addTemplate("sectors/SDKAsteroidMegaFieldMiner")
     self:addTemplate("sectors/SDKMilitaryStronghold")
 end

@@ -93,7 +93,7 @@ if onServer() then
 
     function SDKScrapyardExtension.updateServer(_TimeStep) local _Method = "Update Server"
                 
-        --Log.Debug(_Method, "Time Step: " .. tostring(_TimeStep))
+        Log.Debug(_Method, "Time Step: " .. tostring(_TimeStep))
 
         self.Despawn(_TimeStep) -- Update Despawning Temp Tugs Marked with "SDKLifeTime"
         self.CleanUp(_TimeStep) -- Update the particle/small wreckage clean up.
@@ -346,14 +346,14 @@ if onServer() then
         local _Ship = Sector():createShip(_Faction, "", Plan.Get(), _Position, EntityArrivalType.Jump)
     
         _Ship.shieldDurability = _Ship.shieldMaxDurability
-        _Ship.crew = _Ship.minCrew
+        _Ship.crew = _Ship.idealCrew
     
         AddDefaultShipScripts(_Ship)
         
         local _Turrets = Balancing_GetEnemySectorTurrets(Sector():getCoordinates())
         ShipUtility.addArmedTurretsToCraft(_Ship, _Turrets)
     
-        _Ship.crew = _Ship.minCrew
+        _Ship.crew = _Ship.idealCrew
         _Ship.title = "Scrapyard Tug"
            
         _Ship:addScriptOnce("civilship.lua")

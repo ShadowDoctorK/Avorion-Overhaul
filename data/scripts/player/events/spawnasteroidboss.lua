@@ -109,7 +109,7 @@ if onServer() then
         -- Override the Volume Passing Custom Volume
         local plan = PlanGenerator.makeShipPlan(faction, volume, "Boss 8055", nil, true)
         local boss = Sector():createShip(faction, "", plan, Matrix(), EntityArrivalType.Jump)
-        boss.crew = boss.minCrew
+        boss.crew = boss.idealCrew
         boss.shieldDurability = boss.shieldMaxDurability
         AddDefaultShipScripts(boss)
         SetBoardingDefenseLevel(boss)

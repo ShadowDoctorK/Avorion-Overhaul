@@ -10,7 +10,7 @@ function ShipGenerator.createShip(faction, position, volume, autooverride)
     local plan = PlanGenerator.makeShipPlan(faction, volume, nil, nil, autooverride)
     local ship = Sector():createShip(faction, "", plan, position)
 
-    ship.crew = ship.minCrew
+    ship.crew = ship.idealCrew
     ship.shieldDurability = ship.shieldMaxDurability
 
     AddDefaultShipScripts(ship)
@@ -29,14 +29,14 @@ function ShipGenerator.createFreighterShip(faction, position, volume, autooverri
     local ship = Sector():createShip(faction, "", plan, position)
 
     ship.shieldDurability = ship.shieldMaxDurability
-    ship.crew = ship.minCrew
+    ship.crew = ship.idealCrew
 
     AddDefaultShipScripts(ship)
     
     local turrets = Balancing_GetEnemySectorTurrets(Sector():getCoordinates())
     ShipUtility.addArmedTurretsToCraft(ship, turrets)
 
-    ship.crew = ship.minCrew
+    ship.crew = ship.idealCrew
     ship.title = ShipUtility.getFreighterNameByVolume(ship.volume)
 
     if ovrridescripts ~= true then
@@ -61,14 +61,14 @@ function ShipGenerator.createMiningShip(faction, position, volume, autooverride,
     local ship = Sector():createShip(faction, "", plan, position)
 
     ship.shieldDurability = ship.shieldMaxDurability
-    ship.crew = ship.minCrew
+    ship.crew = ship.idealCrew
 
     AddDefaultShipScripts(ship)
 
     local turrets = Balancing_GetEnemySectorTurrets(Sector():getCoordinates())
     ShipUtility.addUnarmedTurretsToCraft(ship, turrets)
 
-    ship.crew = ship.minCrew
+    ship.crew = ship.idealCrew
     ship.title = ShipUtility.getMinerNameByVolume(ship.volume)
     ship.shieldDurability = ship.shieldMaxDurability
 
@@ -96,7 +96,7 @@ function ShipGenerator.createDefender(faction, position, volume, autooverride)
     turrets = turrets + turrets * math.max(0, faction:getTrait("careful") or 0) * 0.5
 
     ShipUtility.addArmedTurretsToCraft(ship, turrets)
-    ship.crew = ship.minCrew
+    ship.crew = ship.idealCrew
     ship.title = ShipUtility.getMilitaryNameByVolume(ship.volume)
     ship.shieldDurability = ship.shieldMaxDurability
     ship.damageMultiplier = ship.damageMultiplier * 4
@@ -148,12 +148,12 @@ function ShipGenerator.createCarrier(faction, position, fighters)
     end
 
 
-    ship.crew = ship.minCrew
+    ship.crew = ship.idealCrew
 
     local turrets = Balancing_GetEnemySectorTurrets(Sector():getCoordinates())
 
     ShipUtility.addArmedTurretsToCraft(ship, turrets)
-    ship.crew = ship.minCrew
+    ship.crew = ship.idealCrew
     ship.title = ShipUtility.getMilitaryNameByVolume(ship.volume)
 
     ship:addScript("ai/patrol.lua")
@@ -172,7 +172,7 @@ function ShipGenerator.createMilitaryShip(faction, position, volume)
     local turrets = Balancing_GetEnemySectorTurrets(Sector():getCoordinates())
 
     ShipUtility.addArmedTurretsToCraft(ship, turrets)
-    ship.crew = ship.minCrew
+    ship.crew = ship.idealCrew
     ship.title = ShipUtility.getMilitaryNameByVolume(ship.volume)
     ship.shieldDurability = ship.shieldMaxDurability
 
@@ -194,7 +194,7 @@ function ShipGenerator.createTradingShip(faction, position, volume)
         ShipUtility.addArmedTurretsToCraft(ship, turrets)
     end
 
-    ship.crew = ship.minCrew
+    ship.crew = ship.idealCrew
     ship.title = ShipUtility.getTraderNameByVolume(ship.volume)
     ship.shieldDurability = ship.shieldMaxDurability
 

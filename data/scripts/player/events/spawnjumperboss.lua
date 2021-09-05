@@ -41,7 +41,7 @@ function JumperBoss.spawnBoss(x, y)
     local plan = PlanGenerator.makeShipPlan(faction, volume, "Boss Fidget", nil, true)
     local boss = Sector():createShip(faction, "", plan, position, EntityArrivalType.Jump)
 
-    boss.crew = boss.minCrew
+    boss.crew = boss.idealCrew
     boss.shieldDurability = boss.shieldMaxDurability
 
     AddDefaultShipScripts(boss)

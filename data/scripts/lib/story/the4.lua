@@ -179,7 +179,7 @@ function The4.createShip(faction, position, volume, styleName)
     -- Vanilla Items Below
     local ship = Sector():createShip(faction, "", plan, position, EntityArrivalType.Jump)
 
-    ship.crew = ship.minCrew
+    ship.crew = ship.idealCrew
     ship.shieldDurability = ship.shieldMaxDurability
 
     AddDefaultShipScripts(ship)

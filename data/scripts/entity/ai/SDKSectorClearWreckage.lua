@@ -23,6 +23,8 @@ self.Data.TargetPos = { x = 0, y = 0, z = 0 }
 self.Data.WorkingRadius = 0
 self.Data.Stage = 0
 self.Data.TetheredWrecks = {}
+self.Data.WrecksTargeted = false
+self.Data.Tethered = 0
 
 self.TargetChanged = true
 self.DangerRange = 1000 -- 10km
@@ -39,10 +41,6 @@ function SDKSectorClearWreckage.initialize(_TargetID, _Range)
     if onServer() then
         AI.Load(Entity())
         AI.Aggressive(false)        
-    end
-
-    if onClient() then
-
     end
 
 end
@@ -87,24 +85,28 @@ if onServer() then
 
     function SDKSectorClearWreckage.UpdateTether()
         
+        if not self.Data.WrecksTargeted then
+            self.Data.TetheredWrecks = AI.Entities(EntityType.Wreckage, self.Data.TargetPos, self.WreckeRange)
+            self.Data.WrecksTargeted = true
+        end self._Jump = true
+
     end
 
     function SDKSectorClearWreckage.Jump()
+
+        -- Remove Wrecks
+        local _Sector = Sector() for k, v in pairs(self.Data.Wreckages) do
+            _Sector:deleteEntityJumped(v)
+        end
+
+        -- Remove Tug
+        _Sector:deleteEntityJumped(Entitiy())
 
     end
 
 end -- End onServer()
 
--- Client Side Only Items
-if onClient() then
-
-    function SDKSectorClearWreckage.getUpdateInterval()
-        return math.random() + 1.0
-    end
-
-end
-
--- Support Function
+-- Support Functions
 function SDKSectorClearWreckage.SetApproach()
     local Target = Entity(self.Data.TargetID)
     local Ship = Entity()

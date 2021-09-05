@@ -123,7 +123,7 @@ if onServer() then
         boss.shieldDurability = boss.shieldMaxDurability
         boss.title = "Project IHDTX"%_T
         boss.name = ""
-        boss.crew = boss.minCrew
+        boss.crew = boss.idealCrew
 
         -- increase turning speed independent of plan
         local thrusters = Thrusters(boss.id)

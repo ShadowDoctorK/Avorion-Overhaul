@@ -266,7 +266,7 @@ if onServer() then
         boss.shieldDurability = boss.shieldMaxDurability
         boss.title = "The Big Brother"%_T
         boss.name = ""
-        boss.crew = boss.minCrew
+        boss.crew = boss.idealCrew
         boss:addScriptOnce("story/bigaibehaviour")
         boss:addScriptOnce("story/aidialog")
         boss:addScriptOnce("deleteonplayersleft")

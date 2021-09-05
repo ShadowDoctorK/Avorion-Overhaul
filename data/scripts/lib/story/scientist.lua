@@ -125,7 +125,7 @@ function Scientist.spawn()
     local plan = PlanGenerator.makeShipPlan(faction, volume, "Boss Scientist", nil, true)
     local boss = Sector():createShip(faction, "", plan, position, EntityArrivalType.Jump)
 
-    boss.crew = boss.minCrew
+    boss.crew = boss.idealCrew
     boss.shieldDurability = boss.shieldMaxDurability
 
     AddDefaultShipScripts(boss)

@@ -1,3 +1,4 @@
+include ("defaultscripts")
 local Plan = include("SDKUtilityBlockPlan")
 local Designs = include("SDKGlobalDesigns")
 local Rand = include("SDKUtilityRandom")

@@ -29,27 +29,33 @@ local _ModSlot8DamageFactor = 0.9
 local _ModSlot9Durability = 1.33
 local _ModSlot9DamageFactor = 1
 
+
+-- Repalance the stats of the people so they can manage the larger building (Offset cost)
 function initialize()
     _Entity = Entity()
+
+    -- if valid(_Entity) then end
 
     if _Entity.isStation then
 
         _Entity:addMultiplier(StatsBonuses.Engineers, 10)
         _Entity:addMultiplier(StatsBonuses.Mechanics, 10)
-        _Entity:addMultiplier(StatsBonuses.Sergeants, 6)
-        _Entity:addMultiplier(StatsBonuses.Lieutenants, 4)
-        _Entity:addMultiplier(StatsBonuses.Commanders, 2.5)
-        _Entity:addMultiplier(StatsBonuses.Generals, 2.5)        
+        -- _Entity:addMultiplier(StatsBonuses.Sergeants, 6)       Changed in 2.0
+        -- _Entity:addMultiplier(StatsBonuses.Lieutenants, 4)     Changed in 2.0
+        -- _Entity:addMultiplier(StatsBonuses.Commanders, 2.5)    Changed in 2.0
+        -- _Entity:addMultiplier(StatsBonuses.Generals, 2.5)      Changed in 2.0
 
         _Entity:addMultiplier(StatsBonuses.Security, 0.2)
 
         _Entity:addAbsoluteBias(StatsBonuses.DefenseWeapons, 50)
         _Entity:addAbsoluteBias(StatsBonuses.ArbitraryTurrets,26)  
+        _Entity:addMultiplyableBias(StatsBonuses.PointDefenseTurrets, 10)  -- Add 10 Defense Turrets
 
     end
 
     if _Entity.isShip then
-        _Entity:addMultiplier(StatsBonuses.Security, 3)    
+        _Entity:addMultiplier(StatsBonuses.Security, 3) 
+        _Entity:addMultiplyableBias(StatsBonuses.PointDefenseTurrets, 2)   -- Add 2 Defense Turrets   
     end
 
     _Entity:addMultiplier(StatsBonuses.Attackers, 3)
@@ -61,6 +67,6 @@ function UpdateSlotBonuses()
     
     local _Entity = Entity()    
     local _ShipSystem = ShipSystem(_Entity)    
-    local _Slots = _ShipSystem.numSlots
+    local _Slots = _ShipSystem.numSockets
 
 end
