@@ -1,3 +1,9 @@
+--[[
+    Developer Note:
+    Commented out this whole script to prevent log errors. It will be phased out and removed in the next update.
+]]
+
+--[[
 package.path = package.path .. ";data/scripts/lib/?.lua"
 package.path = package.path .. ";data/scripts/?.lua"
 package.path = package.path .. ";?"
@@ -42,13 +48,6 @@ self.StationsTypes = {
     "Default",  
 }
 
---[[
-function SDKScrapyardExtension.Animation(_Entity) 
-    Log.Debug(_Method, "Executing Wreckage Animation...")
-    Sector():createHyperspaceAnimation(_Entity, random():getDirection(), ColorRGB(0.6, 0.5, 0.3), 0.2)
-end
-]]
-
 if onServer() then
 
     self.UpdateInterval = 5
@@ -67,8 +66,8 @@ if onServer() then
 
     function SDKScrapyardExtension.initialize() local _Method = "Initializing"
         
-        local _Sector = Sector()
         Log.Debug(_Method, "Starting...", 1)       
+        local _Sector = Sector()
 
     end
 
@@ -273,17 +272,18 @@ if onServer() then
     end
 
     -- DON'T USE DEFERED CALLBACKS... THEY WILL EVENTUALLY CRASH THE GAME!!!
-    --[[
-    function SDKScrapyardExtension.Despawn(_Ship) local _Method = "Despawn"
-        Log.Debug(_Method, "Despawning: " .. tostring(_Ship.type) .. " - " .. tostring(_Ship.name), 1)
-        if _Ship then Sector():deleteEntityJumped(_Ship) end        
-    end
-    ]]
+    
+    --function SDKScrapyardExtension.Despawn(_Ship) local _Method = "Despawn"
+    --    Log.Debug(_Method, "Despawning: " .. tostring(_Ship.type) .. " - " .. tostring(_Ship.name), 1)
+    --    if _Ship then Sector():deleteEntityJumped(_Ship) end        
+    --end
+    
 
     function SDKScrapyardExtension.Station()
         return self.StationsTypes[Rand.Int(1, #self.StationsTypes)]
     end
 
+    -- Pick a random distance between the threshold area
     function SDKScrapyardExtension.PositionAdjustment(_Posit, _MaxDist)
 
         -- Adjust Random Spawn Distance From Position
@@ -305,11 +305,17 @@ if onServer() then
         return true
     end
 
+    -- Position items around the scrapyard
     function SDKScrapyardExtension.PositionAround(_Position, _MaxDist, _Standoff) local _Method = "Postition Around"
 
-        _Standoff = _Standoff or 0.15
+        _Standoff = _Standoff or 0.25
         _MaxDist = _MaxDist or self.MaxSpawnDistance
         
+        -- Gives it a buffer from the Scrapyard
+        _Position.x = _Position.x + _Standoff
+        _Position.y = _Position.y + _Standoff
+        _Position.z = _Position.z + _Standoff
+
         --Log.Debug(_Method, "Location: " .. tostring(_Position.x) .. ", " .. tostring(_Position.y) .. ", " .. tostring(_Position.z))
         --Log.Debug(_Method, "Max Distance: " .. tostring(_MaxDist))
     
@@ -390,11 +396,11 @@ if onServer() then
         
     end
 
-    --[[
-    function SDKScrapyardExtension.BreaksByVolume(_Volume)
-        local _Breaks = math.floor(_volume / 7000)
-        return _Breaks
-    end
-    ]]
-
+    
+    --function SDKScrapyardExtension.BreaksByVolume(_Volume)
+    --    local _Breaks = math.floor(_volume / 7000)
+    --    return _Breaks
+    --end
+    
 end
+]]

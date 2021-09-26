@@ -14,6 +14,7 @@ SectorEvents = {}
 ]]
 
 -- Reduced the frequency of Pirate Attacks (30 - 60 mins)
+--[[
 if onServer() then
 
     function SectorEvents.addEvent(name, frequency)
@@ -51,6 +52,7 @@ if onServer() then
     --    print ("added event " .. event.path .. " every " .. event.frequency .. " seconds")
 
     end
+    ]]
 
     --[[
     function SectorEvents.clear()
@@ -129,4 +131,4 @@ if onServer() then
         return data
     end
     ]]
-end -- if onServer end
+--end -- if onServer end

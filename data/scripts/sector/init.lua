@@ -14,9 +14,9 @@
 
 if onServer() then
 
-local sector = Sector()
+    local sector = Sector()
 
-sector:addScriptOnce("sector/SDKBackgroundSectorManager.lua")
--- sector:addScriptOnce("sector/SDKScrapyardExtension.lua")
+    sector:addScriptOnce("sector/SDKBackgroundSectorManager.lua")
+    --sector:addScriptOnce("sector/SDKScrapyardExtension.lua")
 
 end

@@ -1,4 +1,19 @@
 --[[
+    Dev Notes:
+
+
+    local Mod = include("SDKUtilityMods")
+
+    -- Example:
+    if Mod.Enabled("2083280364") then -- SDK's Specialized Military Sheild Booster
+        Loot(boss.index):insert(SystemUpgradeTemplate("data/scripts/systems/SpecializedShieldUpgrade1.lua", Rarity(RarityType.Legendary), random():createSeed()))
+    else
+        Loot(boss.index):insert(SystemUpgradeTemplate("data/scripts/systems/shieldbooster.lua", Rarity(RarityType.Legendary), random():createSeed()))
+    end
+
+]]
+
+--[[
 package.path = package.path .. ";data/scripts/lib/?.lua"
 package.path = package.path .. ";data/scripts/?.lua"
 include ("randomext")
@@ -16,16 +31,17 @@ local Swoks = {}
 ----------------------------------------- Added Funcitons ------------------------------------------------
 ----------------------------------------------------------------------------------------------------------
 
-
 local PlanGen = include("plangenerator")
 local Plan = include("SDKUtilityBlockPlan")
 local ShipUtility = include("shiputility")
+local Volume = include("SDKGlobalDesigns - Volumes")
+local Equip = include("SDKGlobalDesigns - Equipment")
 
 function Swoks.ScaleChances()
     -- Adjust based on Difficulty
     local _Chances = {0, 0, 0, 0, 0, 0, 0, 0, 0, 250, 500, 750, 1000, 1000, 1000, 1000}
     local _Settings = GameSettings()
-    if _Settings.difficulty == Difficulty.Insane then        _Chances = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 333, 666, 1000}
+    if _Settings.difficulty == Difficulty.Insane then        _Chances = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 300, 600, 900}
     elseif _Settings.difficulty == Difficulty.Hardcore then  _Chances = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 250, 500, 750, 1000}
     elseif _Settings.difficulty == Difficulty.Expert then    _Chances = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 250, 500, 750, 1000, 1000}
     elseif _Settings.difficulty == Difficulty.Veteran then   _Chances = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 250, 500, 750, 1000, 1000, 1000}
@@ -109,22 +125,25 @@ Swoks.old_spawn = Swoks.spawn function Swoks.spawn(player, x, y)
 
     
     ----------------- Create Boss Swoks ----------------
-    local _Boss
     local Chances = Swoks.ScaleChances() -- Get Volume Ranges
-    local _Volume = PlanGen.GetShipVolume(Chances) * 3 -- Volume will be divided by 3 in the Plan Generator
+    local _Volume = Volume.Ship(Chances) -- Volume will be divided by 3 in the Plan Generator
     local _Faction = Swoks.Faction()
 
     -- Try Loading Custom Design
-    local _Plan if Plan.Load("data/plans/Default/Boss/Swoks.xml") then
-        Plan.Material() Plan.Scale(_Volume) _Plan = Plan.Get()               
+    local _Boss if Plan.Load("data/plans/Default/Boss/Swoks.xml") then
+        Plan.Material() Plan.Scale(_Volume)               
+        _Boss = Sector():createShip(_Faction, "", Plan.Get(), piratePosition())
+        
+        local Armed, Defense = Equip.GetTurrets(_Boss, _Faction)
+        Equip.FactionTurret(_Boss, _Faction, Equip._Armed, Armed)        -- Armed Faction Turrets
+        Equip.FactionTurret(_Boss, _Faction, Equip._Armed, Armed)        -- Armed Faction Turrets
+        Equip.FactionTurret(_Boss, _Faction, Equip._Defense, Defense)    -- Defense Faction Turrets
 
         -- Set Up Basic Stuff Missed Since We Didn't Use The Pirate Generator
-        _Boss = Sector():createShip(_Faction, "", _Plan, piratePosition())
         PirateGenerator.addPirateEquipment(_Boss, "Pirate Mothership")
         _Boss.crew = _Boss.idealCrew
-        _Boss.shieldDurability = _Boss.shieldMaxDurability
-        ShipUtility.addArmedTurretsToCraft(_Boss, Swoks.TotalTurrets())
-        --broadcastInvokeClientFunction("UpdateIcon", _Boss)    
+        _Boss.shieldDurability = _Boss.shieldMaxDurability        
+
     else -- Fallback to Games Generator
         _Boss = PirateGenerator.createBoss(piratePosition())
     end
@@ -132,6 +151,7 @@ Swoks.old_spawn = Swoks.spawn function Swoks.spawn(player, x, y)
 
     _Boss:setTitle("Boss Swoks ${num}"%_T, {num = toRomanLiterals(number)})
     _Boss.dockable = false
+    _Boss:addScript("icon.lua", "data/textures/icons/pixel/enemy-strength-indicators/skull.png")
 
     pirates = {}
     table.insert(pirates, _Boss)

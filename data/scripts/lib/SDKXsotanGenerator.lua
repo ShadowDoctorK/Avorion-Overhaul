@@ -16,8 +16,12 @@ local UpgradeGenerator = include ("upgradegenerator")
 local Plan = include("SDKUtilityBlockPlan")
 local Log = include("SDKDebugLogging")
 
-local _Debug = 1
-local _ModName = "Xsotan Generator" function GetName(n)
+local Equip = include("SDKGlobalDesigns - Equipment")
+local Rand = include("SDKUtilityRandom")
+
+local _Debug = 0
+local _ModName = "Xsotan Generator" 
+local function GetName(n)
     return _ModName .. " - " .. n
 end
 
@@ -1191,12 +1195,11 @@ if onServer() then
     
         local _Ship = Sector():createShip(_Faction, "", _Plan, _Position)
     
-        -- Xsotan have random turrets
-        local numTurrets = math.max(2, Balancing_GetEnemySectorTurrets(x, y) * 0.75) 
-     
-        ShipUtility.addTurretsToCraft(_Ship, SDKXsotanGenerator.PlasmaTurret(), numTurrets, numTurrets)
-        ShipUtility.addTurretsToCraft(_Ship, SDKXsotanGenerator.LaserTurret(), numTurrets, numTurrets)
-        ShipUtility.addTurretsToCraft(_Ship, SDKXsotanGenerator.RailgunTurret(), numTurrets, numTurrets)
+        local Armed, Defense = Equip.GetTurrets(_Ship, _Faction)
+        Equip.InstallTurrets(_Ship, SDKXsotanGenerator.GuardianPlasmaAttack(), Armed)        
+        Equip.InstallTurrets(_Ship, SDKXsotanGenerator.GuardianPlasmaDefense(), Defense)        
+        Equip.CombatHanger(_Ship)                                   -- Add Fighters Wings
+
     
         _Ship:setTitle("${toughness}"%_T .. _Prefix .. "${name}"%_T, {toughness = "", name = _Name})
         _Ship.crew = _Ship.idealCrew
@@ -1237,14 +1240,13 @@ if onServer() then
     
         local _Ship = Sector():createShip(_Faction, "", _Plan, _Position)
     
-        -- Xsotan have random turrets
-        local numTurrets = math.max(2, Balancing_GetEnemySectorTurrets(x, y) * 0.75)
-     
-        ShipUtility.addTurretsToCraft(_Ship, SDKXsotanGenerator.PlasmaTurret(), numTurrets, numTurrets)
-        ShipUtility.addTurretsToCraft(_Ship, SDKXsotanGenerator.LaserTurret(), numTurrets, numTurrets)
-        ShipUtility.addTurretsToCraft(_Ship, SDKXsotanGenerator.RailgunTurret(), numTurrets, numTurrets)
+        local Armed, Defense = Equip.GetTurrets(_Ship, _Faction)
+        Equip.InstallTurrets(_Ship, SDKXsotanGenerator.GuardianPlasmaAttack(), Armed)        
+        Equip.InstallTurrets(_Ship, SDKXsotanGenerator.GuardianPlasmaAttack(), Armed)       
+        Equip.InstallTurrets(_Ship, SDKXsotanGenerator.GuardianPlasmaDefense(), Defense)        
+        Equip.CombatHanger(_Ship)                                   -- Add Fighters Wings
         ShipUtility.addBossAntiTorpedoEquipment(_Ship)
-    
+            
         _Ship:setTitle("${toughness} ${name}"%_T, {toughness = "", name = "Wormhole Guardian Prototype"})    
         _Ship.crew = _Ship.idealCrew
         _Ship.shieldDurability = _Ship.shieldMaxDurability
@@ -1287,35 +1289,36 @@ if onServer() then
         local _Ship = Sector():createShip(_Faction, "", _Plan, _Position)
     
         -- Xsotan have random turrets
-        local numTurrets = math.max(2, Balancing_GetEnemySectorTurrets(_X, _Y) * 0.75)
-     
-        ShipUtility.addTurretsToCraft(_Ship, SDKXsotanGenerator.PlasmaTurret(), numTurrets, numTurrets)
-        ShipUtility.addTurretsToCraft(_Ship, SDKXsotanGenerator.LaserTurret(), numTurrets, numTurrets)
-        ShipUtility.addTurretsToCraft(_Ship, SDKXsotanGenerator.RailgunTurret(), numTurrets, numTurrets)
+        local Armed, Defense = Equip.GetTurrets(_Ship, _Faction)
+        Equip.InstallTurrets(_Ship, SDKXsotanGenerator.GuardianPlasmaAttack(), Armed)        
+        Equip.InstallTurrets(_Ship, SDKXsotanGenerator.GuardianPlasmaAttack(), Armed)        
+        Equip.InstallTurrets(_Ship, SDKXsotanGenerator.GuardianPlasmaAttack(), Armed)        
+        Equip.InstallTurrets(_Ship, SDKXsotanGenerator.GuardianPlasmaDefense(), Defense)  
+        Equip.InstallTurrets(_Ship, SDKXsotanGenerator.GuardianPlasmaDefense(), Defense)  
+        Equip.CombatHanger(_Ship, 10)                          -- Add Fighters Wings      
         ShipUtility.addBossAntiTorpedoEquipment(_Ship)
     
         _Ship:setTitle("${toughness} ${name}"%_T, {toughness = "", name = "Wormhole Guardian"})    
-        _Ship.crew = _Ship.idealCrew
         _Ship.shieldDurability = _Ship.shieldMaxDurability
     
         local upgrades =
         {
-            {rarity = Rarity(RarityType.Legendary), amount = 2},
-            {rarity = Rarity(RarityType.Exotic), amount = 3},
-            {rarity = Rarity(RarityType.Exceptional), amount = 3},
-            {rarity = Rarity(RarityType.Rare), amount = 5},
-            {rarity = Rarity(RarityType.Uncommon), amount = 8},
-            {rarity = Rarity(RarityType.Common), amount = 14},
+            {rarity = Rarity(RarityType.Legendary), amount = 5},
+            {rarity = Rarity(RarityType.Exotic), amount = 7},
+            {rarity = Rarity(RarityType.Exceptional), amount = 9},
+            {rarity = Rarity(RarityType.Rare), amount = 11},
+            {rarity = Rarity(RarityType.Uncommon), amount = 15},
+            {rarity = Rarity(RarityType.Common), amount = 20},
         }
     
         local turrets =
         {
-            {rarity = Rarity(RarityType.Legendary), amount = 2},
-            {rarity = Rarity(RarityType.Exotic), amount = 3},
-            {rarity = Rarity(RarityType.Exceptional), amount = 3},
-            {rarity = Rarity(RarityType.Rare), amount = 5},
-            {rarity = Rarity(RarityType.Uncommon), amount = 8},
-            {rarity = Rarity(RarityType.Common), amount = 14},
+            {rarity = Rarity(RarityType.Legendary), amount = 5},
+            {rarity = Rarity(RarityType.Exotic), amount = 7},
+            {rarity = Rarity(RarityType.Exceptional), amount = 8},
+            {rarity = Rarity(RarityType.Rare), amount = 14},
+            {rarity = Rarity(RarityType.Uncommon), amount = 20},
+            {rarity = Rarity(RarityType.Common), amount = 24},
         }
     
         local generator = UpgradeGenerator()
@@ -1333,10 +1336,14 @@ if onServer() then
     
         AddDefaultShipScripts(_Ship)
     
-        ShipAI(_Ship.id):setAggressive()
         _Ship:addScriptOnce("story/wormholeguardian.lua")
         _Ship:addScriptOnce("story/xsotanbehaviour.lua")
         _Ship:setValue("is_xsotan", 1)
+
+        _Ship.crew = _Ship.idealCrew
+
+        local AI = ShipAI(_Ship.id)
+        AI:setAggressive()
     
         Boarding(_Ship).boardable = false
     
@@ -1346,7 +1353,93 @@ if onServer() then
     ------------------------------------------------------------------------------------------------------------------------------
     ------------------------------------------------------ Custom Weapons --------------------------------------------------------
     ------------------------------------------------------------------------------------------------------------------------------
+        
+    -- Nanite Swarm
+    function SDKXsotanGenerator.GuardianPlasmaAttack()
+        local turret = SectorTurretGenerator(Seed(150)):generate(0, 0, 0, Rarity(RarityType.Exceptional), WeaponType.PlasmaGun)
+        local weapons = {turret:getWeapons()}
+        turret:clearWeapons()
+
+        local dmg = Rand.Int(2000, 4000)
+        local rng = Rand.Int(1500, 2500)
+        local rat = Rand.Float(2, 5)
+        local psz = Rand.Float(2, 5)
+        local ofc = Rand.Float(15, 30)
+        local pen = Rand.Float(0.2, 0.5)
+        local sdm = Rand.Float(1.2, 1.6)
+        local blk = Rand.Int(5, 11)
+
+        for _, weapon in pairs(weapons) do
+            weapon.damageType = DamageType.AntiMatter
+            
+            if weapon.damage < 2000 then
+                weapon.damage = dmg / #weapons
+            end
+
+            weapon.fireRate = rat
+            weapon.reach = rng
+            weapon.pmaximumTime = weapon.reach / weapon.pvelocity
+            weapon.pcolor = Material(6).color
+            weapon.psize = psz
+            weapon.seeker = true
+            weapon.otherForce = ofc
+            weapon.shieldPenetration = pen
+            weapon.shieldDamageMultiplier = sdm
+            weapon.impactParticles = ImpactParticles.Energy
+            weapon.blockPenetration = blk
+            weapon.name = "Guardian Nanite Assult System /* Weapon Name*/"%_t
+            weapon.prefix = "Xsotan /* Weapon Prefix*/"%_t
+            turret:addWeapon(weapon)
+        end
+
+        turret.title = "Xsotan Nanite Assult System"
+        turret.crew = Crew()
+        turret.turningSpeed = 3.0
+        turret:updateStaticStats()
+
+        return turret
+    end
+
+        -- Nanite Swarm
+        function SDKXsotanGenerator.GuardianPlasmaDefense()
+            local turret = SectorTurretGenerator(Seed(150)):generate(0, 0, 0, Rarity(RarityType.Exceptional), WeaponType.PlasmaGun)
+            local weapons = {turret:getWeapons()}
+            turret:clearWeapons()
+
+            local rat = Rand.Float(2, 5)
+            local psz = Rand.Float(2, 5)
+            local ofc = Rand.Float(15, 30)
+            local pen = Rand.Float(0.2, 0.5)
+            local sdm = Rand.Float(1.2, 1.6)
+            local blk = Rand.Int(5, 11)
+
+            for _, weapon in pairs(weapons) do
+                weapon.damageType = DamageType.Fragments
+                weapon.damage = 45 / #weapons
+                weapon.fireRate = rat
+                weapon.reach = 1500
+                weapon.pmaximumTime = weapon.reach / weapon.pvelocity
+                weapon.pcolor = Material(6).color
+                weapon.psize = psz
+                weapon.seeker = true
+                weapon.otherForce = ofc
+                weapon.shieldPenetration = pen
+                weapon.shieldDamageMultiplier = sdm
+                weapon.impactParticles = ImpactParticles.Energy
+                weapon.blockPenetration = blk
+                weapon.name = "Guardian Nanite Defense System /* Weapon Name*/"%_t
+                weapon.prefix = "Xsotan /* Weapon Prefix*/"%_t
+                turret:addWeapon(weapon)
+            end
     
+            turret.title = "Xsotan Nanite Defense System"
+            turret.crew = Crew()
+            turret.turningSpeed = 3.0
+            turret:updateStaticStats()
+    
+            return turret
+        end
+
     function SDKXsotanGenerator.PlasmaTurret(_Rarity)
         local _Rarity = _Rarity or SDKXsotanGenerator.RandomRarity()
         local turret = SectorTurretGenerator(Seed(151)):generate(0, 0, 0, Rarity(_Rarity), WeaponType.PlasmaGun)
@@ -1422,7 +1515,7 @@ if onServer() then
         for _, weapon in pairs(weapons) do
             weapon.reach = 200
             weapon.banimationSpeed = -1
-            weapon.selfForce = -5000
+            weapon.selfForce = -50000000
             weapon.otherForce = 0
             weapon.bshape = BeamShape.Swirly
             weapon.bshapeSize = 1.25

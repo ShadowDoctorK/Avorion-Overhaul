@@ -1,17 +1,28 @@
+--[[
+    Developer Notes:
+    - Pirates are divided by 3 till a dedicated solution is able to be used. This will require the generator overhaul to be finished.
+]]
+
+--[[
+    To Do List"
+    - Update all PlanGenerator.GetShipVolume() refs to local Volume = include("SDKGlobalDesigns - Volumes") Volume.Ship()
+
+    - Use BD's AC Groundhog Light Miner as a drone default
+    - Update data/scripts/sector/passingships.lua to use new PlanGenerator to build ship
+]]
+
 include ("defaultscripts")
+local Rand = include("SDKUtilityRandom")
 local Plan = include("SDKUtilityBlockPlan")
 local Designs = include("SDKGlobalDesigns")
-local Rand = include("SDKUtilityRandom")
-local Log = include("SDKDebugLogging")
+local Volume = include("SDKGlobalDesigns - Volumes")
+local Class = include("SDKGlobalDesigns - Classes")
 
-
-local _ModName = "Plan Generator"
-local _Debug = 0
-
--- Fucntion to build Methodname
-function GetName(n)
-    return _ModName .. " - " .. n
-end
+-- Logging Setup
+    local Log = include("SDKDebugLogging")
+    local _ModName = "Plan Generator"
+    local _Debug = 0
+-- End Logging
 
 ------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------ Stored Vanilla Functions  ---------------------------------------------------
@@ -27,693 +38,766 @@ PlanGenerator.old_makeFreighterPlan =      PlanGenerator.makeFreighterPlan
 PlanGenerator.old_makeAsyncFreighterPlan = PlanGenerator.makeAsyncFreighterPlan
 PlanGenerator.old_makeAsyncCarrierPlan =   PlanGenerator.makeAsyncCarrierPlan
 
+PlanGenerator.old_makeGatePlan =            PlanGenerator.makeGatePlan
+
+
 ------------------------------------------------------------------------------------------------------------------------------
 ----------------------------------------------------- Plan Generator  --------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------
 
-PlanGenerator.VolumeShips = {}
-PlanGenerator.VolumeShips[1]  = 1       -- Slot 1
-PlanGenerator.VolumeShips[2]  = 51      -- Slot 2: 51660m3
-PlanGenerator.VolumeShips[3]  = 128     -- Slot 3: 131000m3
-PlanGenerator.VolumeShips[4]  = 320     -- Slot 4
-PlanGenerator.VolumeShips[5]  = 800     -- Slot 5
-PlanGenerator.VolumeShips[6]  = 2000    -- Slot 6
-PlanGenerator.VolumeShips[7]  = 5000    -- Slot 7
-PlanGenerator.VolumeShips[8]  = 12500   -- Slot 8
-PlanGenerator.VolumeShips[9]  = 19764   -- Slot 9
-PlanGenerator.VolumeShips[10] = 31250   -- Slot 10
-PlanGenerator.VolumeShips[11] = 43065   -- Slot 11
-PlanGenerator.VolumeShips[12] = 59348   -- Slot 12
-PlanGenerator.VolumeShips[13] = 78125   -- Slot 13
-PlanGenerator.VolumeShips[14] = 107554  -- Slot 14
-PlanGenerator.VolumeShips[15] = 148371  -- Slot 15
-PlanGenerator.VolumeShips[16] = 250000  -- Titan Scale / Max Size Limit For Slot 15 
-PlanGenerator.VolumeShips[17] = 500000  -- Max Size Limit for AI Titan Class
+local self = PlanGenerator
 
-PlanGenerator.VolumeStations = {}
-PlanGenerator.VolumeStations[1] = 200000
-PlanGenerator.VolumeStations[2] = 300000
-PlanGenerator.VolumeStations[3] = 400000
-PlanGenerator.VolumeStations[4] = 600000
-PlanGenerator.VolumeStations[5] = 800000
-PlanGenerator.VolumeStations[6] = 1000000
-
--- Allows Overrideing Global Volume Scales for Ships
--- This will effect all mods that use these volumes
-function PlanGenerator.OverrideVolumeShips(new)
-    PlanGenerator.VolumeShips = new
+-- Fucntion to build Methodname
+function PlanGenerator.LogName(n)
+    return _ModName .. " - " .. n
 end
 
--- Allows Overrideing Global Volume Scales for Stations
--- This will effect all mods that use these volumes
-function PlanGenerator.OverrideVolumeStations(new)
-    PlanGenerator.VolumeStations = new
+function PlanGenerator.GetDeisgns()
+    return Designs
+end 
+
+function PlanGenerator.GetVolume()
+    return Volume
 end
 
-function PlanGenerator.GetStationVolume(override)
-    local _MethodName = GetName("Get Station Volume")
-
-    math.random()
-    local R = Random(Seed(appTimeMs()))
-
-    local Chance = {}
-    Chance[1]   = 15
-    Chance[2]   = 30
-    Chance[3]   = 60
-    Chance[4]   = 85 
-    Chance[5]   = 100 
-
-    if override then
-        Log.Debug(_MethodName, "Overriding Default Chance", _Debug)
-        Chance = override
-    end
-
-    local Roll = R:getInt(1, 100)
-    local Volume = 2000000000
-
-    Log.Debug(_MethodName, "Rolled Dice: " .. tostring(Roll), _Debug)
-
-    if Roll < Chance[1] then            
-        Volume = R:getInt(PlanGenerator.VolumeStations[1], PlanGenerator.VolumeStations[2] -1)
-    elseif Roll < Chance[2] then        
-        Volume = R:getInt(PlanGenerator.VolumeStations[2], PlanGenerator.VolumeStations[3] -1)
-    elseif Roll < Chance[3] then       
-        Volume = R:getInt(PlanGenerator.VolumeStations[3], PlanGenerator.VolumeStations[4] -1)
-    elseif Roll < Chance[4] then        
-        Volume = R:getInt(PlanGenerator.VolumeStations[4], PlanGenerator.VolumeStations[5] -1)
-    elseif Roll <= Chance[5] then        
-        Volume = R:getInt(PlanGenerator.VolumeStations[5], PlanGenerator.VolumeStations[6] -1)
-    else                                
-        Volume = R:getInt(PlanGenerator.VolumeStations[1], PlanGenerator.VolumeStations[6])
-        Log.Warning(_MethodName, "Something Went Wrong, Selecting Random Total Volume: " .. tostring(Volume))
-    end
-
-    Log.Debug(_MethodName, "Selected Volume: " .. tostring(Volume), _Debug)
-
-    return Volume / 2
-
+function PlanGenerator.GetBlockPlan()
+    return Plan
 end
 
-function PlanGenerator.MilitaryShipStyleByVolume(_Volume)
-    local _Style
-    if _Volume >= PlanGenerator.VolumeShips[1] and _Volume < PlanGenerator.VolumeShips[5] then             _Style = "Scout"
-    elseif _Volume >= PlanGenerator.VolumeShips[6] and _Volume < PlanGenerator.VolumeShips[7] then         _Style = "Corvette"
-    elseif _Volume >= PlanGenerator.VolumeShips[7] and _Volume < PlanGenerator.VolumeShips[9] then         _Style = "Frigate"
-    elseif _Volume >= PlanGenerator.VolumeShips[9] and _Volume < PlanGenerator.VolumeShips[11] then        _Style = "Destroyer"
-    elseif _Volume >= PlanGenerator.VolumeShips[11] and _Volume < PlanGenerator.VolumeShips[13] then       _Style = "Cruiser"
-    elseif _Volume >= PlanGenerator.VolumeShips[13] and _Volume < PlanGenerator.VolumeShips[15] then       _Style = "Battleship"
-    elseif _Volume >= PlanGenerator.VolumeShips[15] and _Volume < PlanGenerator.VolumeShips[16] then       _Style = "Dreadnought"
-    elseif _Volume >= PlanGenerator.VolumeShips[16] then                                                   _Style = "Titan"
-    end return _Style
-end
+-- Global Plans (Picks and Returns a Plan)
+    function PlanGenerator.GlobalStationPlan(_Faction, S, V, MT)
+        local _MethodName = self.LogName("Global Station Plan")
 
-function PlanGenerator.GetShipVolume(override)
-    local _MethodName = GetName("Get Ship Volume")
-
-    -- Chance Number Must be Matched with PlanGenerator.VolumeShips 
-    -- Leave out the last item in PlanGenerator.VolumeShips because
-    -- it will act as the upper limit for plan volume
-    local Chance = {}
-    Chance[1]   = 0
-    Chance[2]   = 0
-    Chance[3]   = 0
-    Chance[4]   = 40    -- 40 Ships
-    Chance[5]   = 80    -- 40 Ships
-    Chance[6]   = 150   -- 70 Ships
-    Chance[7]   = 300   -- 150 Ships
-    Chance[8]   = 450   -- 110 Ships
-    Chance[9]   = 560   -- 100 Ships
-    Chance[10]  = 660   -- 100 Ships
-    Chance[11]  = 740   -- 80 Ships
-    Chance[12]  = 800   -- 60 Ships
-    Chance[13]  = 870   -- 70 Ships
-    Chance[14]  = 940   -- 70 Ships
-    Chance[15]  = 995   -- 59 Ships
-    Chance[16]  = 1000  -- 5 Ships / 1000 Ships
-
-    if override then
-        Log.Debug(_MethodName, "Overriding Default Chance", _Debug)
-        Chance = override
-    end
-
-    local Roll = Rand.Int(1, 1000)
-    local Volume = 1
-
-    Log.Debug(_MethodName, "Rolled Dice: " .. tostring(Roll), _Debug)
-
-    if Roll < Chance[1] then            Volume = Rand.Int(PlanGenerator.VolumeShips[1], PlanGenerator.VolumeShips[2] -1)
-    elseif Roll < Chance[2] then        Volume = Rand.Int(PlanGenerator.VolumeShips[2], PlanGenerator.VolumeShips[3] -1)
-    elseif Roll < Chance[3] then        Volume = Rand.Int(PlanGenerator.VolumeShips[3], PlanGenerator.VolumeShips[4] -1)
-    elseif Roll < Chance[4] then        Volume = Rand.Int(PlanGenerator.VolumeShips[4], PlanGenerator.VolumeShips[5] -1)
-    elseif Roll < Chance[5] then        Volume = Rand.Int(PlanGenerator.VolumeShips[5], PlanGenerator.VolumeShips[6] -1)
-    elseif Roll < Chance[6] then        Volume = Rand.Int(PlanGenerator.VolumeShips[6], PlanGenerator.VolumeShips[7] -1)        
-    elseif Roll < Chance[7] then        Volume = Rand.Int(PlanGenerator.VolumeShips[7], PlanGenerator.VolumeShips[8] -1)
-    elseif Roll < Chance[8] then        Volume = Rand.Int(PlanGenerator.VolumeShips[8], PlanGenerator.VolumeShips[9] -1)
-    elseif Roll < Chance[9] then        Volume = Rand.Int(PlanGenerator.VolumeShips[9], PlanGenerator.VolumeShips[10] -1)
-    elseif Roll < Chance[10] then       Volume = Rand.Int(PlanGenerator.VolumeShips[10], PlanGenerator.VolumeShips[11] -1)
-    elseif Roll < Chance[11] then       Volume = Rand.Int(PlanGenerator.VolumeShips[11], PlanGenerator.VolumeShips[12] -1)
-    elseif Roll < Chance[12] then       Volume = Rand.Int(PlanGenerator.VolumeShips[12], PlanGenerator.VolumeShips[13] -1)
-    elseif Roll < Chance[13] then       Volume = Rand.Int(PlanGenerator.VolumeShips[13], PlanGenerator.VolumeShips[14] -1)
-    elseif Roll < Chance[14] then       Volume = Rand.Int(PlanGenerator.VolumeShips[14], PlanGenerator.VolumeShips[15] -1)
-    elseif Roll < Chance[15] then       Volume = Rand.Int(PlanGenerator.VolumeShips[15], PlanGenerator.VolumeShips[16] -1)
-    elseif Roll < Chance[16] then       Volume = Rand.Int(PlanGenerator.VolumeShips[16], PlanGenerator.VolumeShips[17])   
-    else                                Volume = Rand.Int(PlanGenerator.VolumeShips[1], PlanGenerator.VolumeShips[15])
-        Log.Warning(_MethodName, "Something Went Wrong, Selecting Random Slot Volume: " .. tostring(Volume))
-    end
-
-    Log.Debug(_MethodName, "Selected Volume: " .. tostring(Volume), _Debug)
-
-    return Volume / 2
-
-end
-
-function PlanGenerator.GlobalStationPlan(_Faction, _Style, _Volume, _Material)
-    local _MethodName = GetName("Global Station Plan")
-
-    if onClient() then 
-        Log.Debug(_MethodName, "Tried To Execute On Client", _Debug)
-        return 
-    end
-
-    Log.Debug(_MethodName, "Value (Volume): " .. tostring(_Volume), _Debug)
-    Log.Debug(_MethodName, "Value (Material): " .. tostring(_Material), _Debug)
-    Log.Debug(_MethodName, "Value (Faction): " .. tostring(_Faction.index), _Debug)
-    Log.Debug(_MethodName, "Loading Station Type: " .. tostring(_Style), _Debug)
-
-    if Plan.Pick(PlanGenerator.GlobalStationTable(_Faction.index, _Style)) then
-        Plan.Material(_Material, "Tier")
-        Plan.Scale(_Volume)
-    end
-    
-    return Plan.Get()
-
-end
-
-function PlanGenerator.GlobalMilitaryShipPlan(_FactionIndex, _Style, _Volume, _Material)
-    local _MethodName = GetName("Global Ship Plan")
-
-    if onClient() then 
-        Log.Debug(_MethodName, "Tried To Execute On Client", _Debug)
-        return 
-    end
-
-    -- Temp Pirate Solution. Remove when we have a dedicated Generator for Pirates
-    if _Style == "Pirate" then _Volume = _Volume / 3 end
-    
-    Log.Debug(_MethodName, "Value (Faction): " .. tostring(_FactionIndex), _Debug)
-    Log.Debug(_MethodName, "Value (Style): " .. tostring(_Style), _Debug)
-    Log.Debug(_MethodName, "Value (Volume): " .. tostring(_Volume), _Debug)
-    Log.Debug(_MethodName, "Value (Material): " .. tostring(_Material), _Debug)
-
-    -- Pick New Style Randomly
-    _Style = PlanGenerator.MilitaryShipStyleByVolume(_Volume)
-
-    -- Pick A Plan And Set It Up
-    if Plan.Pick(PlanGenerator.GlobalMilitaryShipTable(_FactionIndex, _Volume, _Style)) then
-        Plan.Material(_Material, "Tier")
-        Plan.Scale(_Volume)
-    end
-    
-    return Plan.Get()
-
-end
-
-function PlanGenerator.GlobalCarrierPlan(_FactionIndex, _Style, _Volume, _Material)
-    local _MethodName = GetName("Global Carrier Ship Plan")
-
-    if onClient() then 
-        Log.Debug(_MethodName, "Tried To Execute On Client", _Debug)
-        return 
-    end
-
-    Log.Debug(_MethodName, "Value (Faction): " .. tostring(_FactionIndex), _Debug)
-    Log.Debug(_MethodName, "Value (Style): " .. tostring(_Style), _Debug)
-    Log.Debug(_MethodName, "Value (Volume): " .. tostring(_Volume), _Debug)
-    Log.Debug(_MethodName, "Value (Material): " .. tostring(_Material), _Debug)
-    
-    if Plan.Pick(PlanGenerator.GlobalMilitaryShipTable(_FactionIndex,_Volume, _Style)) then
-        Plan.Material(_Material, "Tier")
-        Plan.Scale(_Volume)
-    end
-    
-    return Plan.Get()
-
-end
-
-function PlanGenerator.GlobalFreighterPlan(_FactionIndex, _Style, _Volume, _Material)
-    local _MethodName = GetName("Global Freighter Plan")
-
-    if onClient() then 
-        Log.Debug(_MethodName, "Tried To Execute On Client", _Debug)
-        return 
-    end
-
-    Log.Debug(_MethodName, "Value (Faction): " .. tostring(_FactionIndex), _Debug)
-    Log.Debug(_MethodName, "Value (Style): " .. tostring(_Style), _Debug)
-    Log.Debug(_MethodName, "Value (Volume): " .. tostring(_Volume), _Debug)
-    Log.Debug(_MethodName, "Value (Material): " .. tostring(_Material), _Debug)
-    
-    if Plan.Pick(PlanGenerator.GlobalFreighterTable(_Volume, _Style)) then
-        Plan.Material(_Material, "Tier")
-        Plan.Scale(_Volume)
-    end
-    
-    return Plan.Get()
-
-end
-
-function PlanGenerator.GlobalMinerPlan(_FactionIndex, _Style, _Volume, _Material)
-    local _MethodName = GetName("Global Freighter Plan")
-
-    if onClient() then 
-        Log.Debug(_MethodName, "Tried To Execute On Client", _Debug)
-        return 
-    end
-
-    Log.Debug(_MethodName, "Value (Faction): " .. tostring(_FactionIndex), _Debug)
-    Log.Debug(_MethodName, "Value (Style): " .. tostring(_Style), _Debug)
-    Log.Debug(_MethodName, "Value (Volume): " .. tostring(_Volume), _Debug)
-    Log.Debug(_MethodName, "Value (Material): " .. tostring(_Material), _Debug)
-    
-    if Plan.Pick(PlanGenerator.GlobalMinerTable(_Volume, _Style)) then
-        Plan.Material(_Material, "Tier")
-        Plan.Scale(_Volume)
-    end
-    
-    return Plan.Get()
-
-end
-
-function PlanGenerator.GlobalStationTable(_FactionIndex, _Style)
-    local _MethodName = GetName("Global Station Table")
-
-    if onClient() then 
-        Log.Debug(_MethodName, "Tried To Execute On Client", _Debug)
-        return 
-    end
-
-    -- Get Faction Pack Stations
-    local _Table = Designs.FactionStation(_FactionIndex, _Style)
-
-    -- Return Faction Pack Table or Fallback to Global Designs
-    if _Table and #_Table ~= 0 then return _Table end
-
-    Log.Debug(_MethodName, "No Faction Design, Searching For Global Design...", _Debug)
-
-    -- Global Default Fallback
-    _Table = Designs.Stations
-
-    -- Global Designs
-    if _Style == "Shipyard" then                 _Table = Designs.Shipyards
-    elseif _Style == "RepairDock" then           _Table = Designs.RepairDocks
-    elseif _Style == "ResourceDepot" then        _Table = Designs.ResourceDepots
-    elseif _Style == "TradingPost" then          _Table = Designs.TradingPosts
-    elseif _Style == "EquipmentDock" then        _Table = Designs.EquipmentDocks
-    elseif _Style == "SmugglersMarket" then      _Table = Designs.SmugglersMarkets
-    elseif _Style == "Scrapyard" then            _Table = Designs.Scrapyards
-    elseif _Style == "Mine" then                 _Table = Designs.Mines
-    elseif _Style == "Factory" then              _Table = Designs.Factories
-    elseif _Style == "FighterFactory" then       _Table = Designs.FighterFactories
-    elseif _Style == "TurretFactory" then        _Table = Designs.TurretFactories
-    elseif _Style == "SolarPowerPlant" then      _Table = Designs.SolarPowerPlants
-    elseif _Style == "Farm" then                 _Table = Designs.Farms
-    elseif _Style == "Ranch" then                _Table = Designs.Ranches
-    elseif _Style == "Collector" then            _Table = Designs.Collectors
-    elseif _Style == "Biotope" then              _Table = Designs.Biotopes
-    elseif _Style == "Casino" then               _Table = Designs.Casinos
-    elseif _Style == "Habitat" then              _Table = Designs.Habitats
-    elseif _Style == "MilitaryOutpost" then      _Table = Designs.MilitaryOutposts
-    elseif _Style == "Headquarters" then         _Table = Designs.Headquarters
-    elseif _Style == "ResearchStation" then      _Table = Designs.ResearchStations
-    elseif _Style == "Default" then              _Table = Designs.Stations
-    elseif _Style then Log.Info(_MethodName, "[TRACKER#1] New/Untracked Staion Style: " .. tostring(_Style))  
-    end
-    
-
-    -- Fallback To Generic Stations
-    if #_Table == 0 then
-        Log.Warning(_MethodName, "[" .. tostring(_Style) .. "] No Designs were returned. Attempting to use a generic station design.")
-        
-        _Table = Designs.Stations if #_Table == 0 then
-            Log.Debug(_MethodName, tostring(#_Table) .. " Global Generic Stations Loaded")
-            Log.Warning(_MethodName, "[" .. tostring(_Style) .. "] No Generic Designs. Using The Games Generator.")            
+        if onClient() then 
+            Log.Debug(_MethodName, "Tried To Execute On Client", _Debug) return 
         end
+
+        Log.Debug(_MethodName, "Value (Volume): " .. tostring(V), _Debug)
+        Log.Debug(_MethodName, "Value (Material): " .. tostring(MT), _Debug)
+        Log.Debug(_MethodName, "Value (Faction): " .. tostring(_Faction.index), _Debug)
+        Log.Debug(_MethodName, "Loading Station Type: " .. tostring(S), _Debug)
+
+        if Plan.Pick(PlanGenerator.GlobalStationTable(_Faction.index, S)) then
+            Plan.Material(MT, "Tier")
+            Plan.Scale(V)
+        end
+        
+        return Plan.Get()
+
     end
 
-    return _Table
+    function PlanGenerator.GlobalMilitaryShipPlan(FI, S, V, MT)
+        local _MethodName = self.LogName("Global Ship Plan")
 
-end
+        if onClient() then 
+            Log.Debug(_MethodName, "Tried To Execute On Client", _Debug) return 
+        end
 
-function PlanGenerator.GlobalMilitaryShipTable(_FactionIndex, _Volume, _Style)
-    local _MethodName = GetName("Global Ship Table")
-    Log.Debug(_MethodName, "Arg Style: " .. tostring(_Style))
+        -- Temp Pirate Solution. Remove when we have a dedicated Generator for Pirates
+        if S == "Pirate" then V = V / 3 end
+        
+        Log.Debug(_MethodName, "Value (Faction): " .. tostring(FI), _Debug)
+        Log.Debug(_MethodName, "Value (Style): " .. tostring(S), _Debug)
+        Log.Debug(_MethodName, "Value (Volume): " .. tostring(V), _Debug)
+        Log.Debug(_MethodName, "Value (Material): " .. tostring(MT), _Debug)
 
-    if not _Style then _Style = PlanGenerator.MilitaryShipStyleByVolume(_Volume) end
+        -- Pick New Style Based of Volume
+        S = Volume.MilitaryClass(V)
 
-    -- Get Faction Pack Ships
-    local _Table = Designs.FactionShip(_FactionIndex, _Style)
+        -- Pick A Plan And Set It Up
+        if Plan.Pick(PlanGenerator.GlobalMilitaryTable(FI, V, S)) then
+            Plan.Material(MT, "Tier")
+            Plan.Scale(V)
+        end
+        
+        return Plan.Get()
 
-    -- Return Faction Pack Table or Fallback to Global Designs
-    if _Table and #_Table ~= 0 then return _Table end
-
-    -- Default Table
-    local _Table = Designs.Destroyers
-
-    -- Pick From Global Designs
-    if _Style == "Scout" then               _Table = Designs.Scouts
-    elseif _Style == "Corvette" then        _Table = Designs.Corvettes
-    elseif _Style == "Frigate" then         _Table = Designs.Frigates
-    elseif _Style == "Destroyer" then       _Table = Designs.Destroyers
-    elseif _Style == "Cruiser" then         _Table = Designs.Cruisers
-    elseif _Style == "Battleship" then      _Table = Designs.Battleships
-    elseif _Style == "Dreadnought" then     _Table = Designs.Dreadnoughts
-    elseif _Style == "Titan" then           _Table = Designs.Titans
-    elseif _Style == "Carrier" then         _Table = Designs.Carriers
     end
 
-    return _Table
+    function PlanGenerator.GlobalCarrierPlan(FI, S, V, MT)
+        local _MethodName = self.LogName("Global Carrier Ship Plan")
 
-end
+        if onClient() then 
+            Log.Debug(_MethodName, "Tried To Execute On Client", _Debug) return 
+        end
 
-function PlanGenerator.GlobalFreighterTable(_Volume, _Style)
-    local _MethodName = GetName("Global Ship Table")
+        Log.Debug(_MethodName, "Value (Faction): " .. tostring(FI), _Debug)
+        Log.Debug(_MethodName, "Value (Style): " .. tostring(S), _Debug)
+        Log.Debug(_MethodName, "Value (Volume): " .. tostring(V), _Debug)
+        Log.Debug(_MethodName, "Value (Material): " .. tostring(MT), _Debug)
+        
+        if Plan.Pick(PlanGenerator.GlobalCarrierTable(FI,V, S)) then
+            Plan.Material(MT, "Tier")
+            Plan.Scale(V)
+        end
+        
+        return Plan.Get()
 
-    local _Table = Designs.MediumFreighters
-
-    if _Volume >= PlanGenerator.VolumeShips[1] and _Volume < PlanGenerator.VolumeShips[7] then          -- Small
-        _Table = Designs.SmallFreighters
-    elseif _Volume >= PlanGenerator.VolumeShips[7] and _Volume < PlanGenerator.VolumeShips[10] then     -- Medium
-        _Table = Designs.MediumFreighters
-    elseif _Volume >= PlanGenerator.VolumeShips[10] then                                                -- Large
-        _Table = Designs.LargeFreighters
     end
 
-    return _Table
+    function PlanGenerator.GlobalFreighterPlan(FI, S, V, MT)
+        local _MethodName = self.LogName("Global Freighter Plan")
 
-end
+        if onClient() then 
+            Log.Debug(_MethodName, "Tried To Execute On Client", _Debug) return 
+        end
 
-function PlanGenerator.GlobalMinerTable(_Volume, _Style)
-    local _MethodName = GetName("Global Miner Table")
+        Log.Debug(_MethodName, "Value (Faction): " .. tostring(FI), _Debug)
+        Log.Debug(_MethodName, "Value (Style): " .. tostring(S), _Debug)
+        Log.Debug(_MethodName, "Value (Volume): " .. tostring(V), _Debug)
+        Log.Debug(_MethodName, "Value (Material): " .. tostring(MT), _Debug)
+        
+        if Plan.Pick(PlanGenerator.GlobalFreighterTable(V, S)) then
+            Plan.Material(MT, "Tier")
+            Plan.Scale(V)
+        end
+        
+        return Plan.Get()
 
-    local _Table = Designs.MediumMiners
-
-    if _Volume >= PlanGenerator.VolumeShips[1] and _Volume < PlanGenerator.VolumeShips[5] then          -- Mini
-        _Table = Designs.SmallMiners
-    elseif _Volume >= PlanGenerator.VolumeShips[5] and _Volume < PlanGenerator.VolumeShips[9] then      -- Small
-        _Table = Designs.SmallMiners
-    elseif _Volume >= PlanGenerator.VolumeShips[9] and _Volume < PlanGenerator.VolumeShips[12] then     -- Medium
-        _Table = Designs.MediumMiners
-    elseif _Volume >= PlanGenerator.VolumeShips[12] then                                                -- Large
-        _Table = Designs.LargeMiners
     end
 
-    return _Table
+    function PlanGenerator.GlobalSalvagerPlan(FI, S, V, MT)
+        local _MethodName = self.LogName("Global Salvager Plan")
 
-end
+        if onClient() then 
+            Log.Debug(_MethodName, "Tried To Execute On Client", _Debug) return 
+        end
+
+        Log.Debug(_MethodName, "Value (Faction): " .. tostring(FI), _Debug)
+        Log.Debug(_MethodName, "Value (Style): " .. tostring(S), _Debug)
+        Log.Debug(_MethodName, "Value (Volume): " .. tostring(V), _Debug)
+        Log.Debug(_MethodName, "Value (Material): " .. tostring(MT), _Debug)
+        
+        if Plan.Pick(PlanGenerator.GlobalSalvagerTable(V, S)) then
+            Plan.Material(MT, "Tier")
+            Plan.Scale(V)
+        end
+        
+        return Plan.Get()
+
+    end
+
+    function PlanGenerator.GlobalMinerPlan(FI, S, V, MT)
+        local _MethodName = self.LogName("Global Miner Plan")
+
+        if onClient() then 
+            Log.Debug(_MethodName, "Tried To Execute On Client", _Debug) return 
+        end
+
+        Log.Debug(_MethodName, "Value (Faction): " .. tostring(FI), _Debug)
+        Log.Debug(_MethodName, "Value (Style): " .. tostring(S), _Debug)
+        Log.Debug(_MethodName, "Value (Volume): " .. tostring(V), _Debug)
+        Log.Debug(_MethodName, "Value (Material): " .. tostring(MT), _Debug)
+        
+        if Plan.Pick(PlanGenerator.GlobalMinerTable(V, S)) then
+            Plan.Material(MT, "Tier")
+            Plan.Scale(V)
+        end
+        
+        return Plan.Get()
+
+    end
+
+    function PlanGenerator.GlobalCivilianPlan(FI, S, V, MT)
+        local _MethodName = self.LogName("Global Civilian Plan")
+
+        if onClient() then 
+            Log.Debug(_MethodName, "Tried To Execute On Client", _Debug) return 
+        end
+
+        Log.Debug(_MethodName, "Value (Faction): " .. tostring(FI), _Debug)
+        Log.Debug(_MethodName, "Value (Style): " .. tostring(S), _Debug)
+        Log.Debug(_MethodName, "Value (Volume): " .. tostring(V), _Debug)
+        Log.Debug(_MethodName, "Value (Material): " .. tostring(MT), _Debug)
+        
+        if Plan.Pick(PlanGenerator.GlobalCivilianTable(V, S)) then
+            Plan.Material(MT, "Tier")
+            Plan.Scale(V)
+        end
+        
+        return Plan.Get()
+
+    end
+
+    function PlanGenerator.GlobalCrewTransportPlan(FI, S, V, MT)
+        local _MethodName = self.LogName("Global Crew Transport Plan")
+
+        if onClient() then 
+            Log.Debug(_MethodName, "Tried To Execute On Client", _Debug) return 
+        end
+
+        Log.Debug(_MethodName, "Value (Faction): " .. tostring(FI), _Debug)
+        Log.Debug(_MethodName, "Value (Style): " .. tostring(S), _Debug)
+        Log.Debug(_MethodName, "Value (Volume): " .. tostring(V), _Debug)
+        Log.Debug(_MethodName, "Value (Material): " .. tostring(MT), _Debug)
+        
+        if Plan.Pick(PlanGenerator.GlobalCrewTransportTable(V, S)) then
+            Plan.Material(MT, "Tier")
+            Plan.Scale(V)
+        end
+        
+        return Plan.Get()
+
+    end
+--
+
+-- Global Tables (Picks and Returns Design Tables)
+
+    function PlanGenerator.GlobalStationTable(FI, S)
+        local _MethodName = self.LogName("Global Station Table")
+
+        if onClient() then 
+            Log.Debug(_MethodName, "Tried To Execute On Client", _Debug)
+            return 
+        end
+
+        -- Get Faction Pack Stations
+        local T = Designs.FactionStation(FI, S)
+
+        -- Return Faction Pack Table or Fallback to Global Designs
+        if T and #T ~= 0 then return T end
+
+        --Log.Debug(_MethodName, "No Faction Design, Searching For Global Design...", _Debug)
+
+        -- Global Default Fallback
+        T = Designs.Stations
+
+        -- Global Designs
+        if S == Class.Shipyard then                 T = Designs.Shipyards
+        elseif S == Class.RepairDock then           T = Designs.RepairDocks
+        elseif S == Class.ResourceDepot then        T = Designs.ResourceDepots
+        elseif S == Class.TradingPost then          T = Designs.TradingPosts
+        elseif S == Class.EquipmentDock then        T = Designs.EquipmentDocks
+        elseif S == Class.SmugglersMarket then      T = Designs.SmugglersMarkets
+        elseif S == Class.Scrapyard then            T = Designs.Scrapyards
+        elseif S == Class.Mine then                 T = Designs.Mines
+        elseif S == Class.Factory then              T = Designs.Factories
+        elseif S == Class.FighterFactory then       T = Designs.FighterFactories
+        elseif S == Class.TurretFactory then        T = Designs.TurretFactories
+        elseif S == Class.SolarPowerPlant then      T = Designs.SolarPowerPlants
+        elseif S == Class.Farm then                 T = Designs.Farms
+        elseif S == Class.Ranch then                T = Designs.Ranches
+        elseif S == Class.Collector then            T = Designs.Collectors
+        elseif S == Class.Biotope then              T = Designs.Biotopes
+        elseif S == Class.Casino then               T = Designs.Casinos
+        elseif S == Class.Habitat then              T = Designs.Habitats
+        elseif S == Class.MilitaryOutpost then      T = Designs.MilitaryOutposts
+        elseif S == Class.Headquarters then         T = Designs.Headquarters
+        elseif S == Class.ResearchStation then      T = Designs.ResearchStations
+        elseif S == Class.TravelHub then            T = Designs.TravelHubs
+        elseif S == "Default" then                  T = Designs.Stations
+        elseif S then Log.Info(_MethodName, "[TRACKER#1] New/Untracked Staion Style: " .. tostring(S))  
+        end
+        
+
+        -- Fallback To Generic Stations
+        if #T == 0 then
+            Log.Warning(_MethodName, "[" .. tostring(S) .. "] No Designs were returned. Attempting to use a generic station design.")
+            
+            T = Designs.Stations if #T == 0 then
+                Log.Debug(_MethodName, tostring(#T) .. " Global Generic Stations Loaded")
+                Log.Warning(_MethodName, "[" .. tostring(S) .. "] No Generic Designs. Using The Games Generator.")            
+            end
+        end
+
+        return T
+
+    end
+
+    function PlanGenerator.GlobalMilitaryTable(FI, V, S) local _MethodName = self.LogName("Global Military Table")
+        Log.Debug(_MethodName, "Style: " .. tostring(S), _Debug)
+
+        if not Class.IsMilitary(S) then S = Volume.MilitaryClass(V) end
+        local T = Designs.FactionShip(FI, S)
+        if T and #T ~= 0 then return T end -- Get Faction Plan
+        local T = Designs.Get(S) return T  -- Get Generic Plan
+
+    end
+
+    function PlanGenerator.GlobalCarrierTable(FI, V, S) local _MethodName = self.LogName("Global Carrier Table")
+        Log.Debug(_MethodName, "Style: " .. tostring(S), _Debug)
+
+        local T = Designs.FactionShip(FI, "Carrier") 
+        if T and #T ~= 0 then return T end -- Return Faction Plan
+        local T = Designs.Get(S) return T  -- Get Generic Plan
+
+    end
+
+    function PlanGenerator.GlobalFreighterTable(V, S) local _MethodName = self.LogName("Global Freighter Table")
+        Log.Debug(_MethodName, "Style: " .. tostring(S), _Debug)
+
+        if not Class.IsFreighter(S) then S = Volume.FreighterClass(V) end    
+        local T = Designs.Get(S) return T  -- Get Generic Plan
+
+    end
+
+    function PlanGenerator.GlobalMinerTable(V, S) local _MethodName = self.LogName("Global Miner Table")
+        Log.Debug(_MethodName, "Style: " .. tostring(S), _Debug)
+
+        if not Class.IsMiner(S) then S = Volume.MinerClass(V) end    
+        local T = Designs.Get(S) return T  -- Get Generic Plan
+
+    end
+
+    function PlanGenerator.GlobalSalvagerTable(V, S) local _MethodName = self.LogName("Global Salvager Table")
+        Log.Debug(_MethodName, "Style: " .. tostring(S), _Debug)
+
+        if not Class.IsSalvager(S) then S = Volume.SalvagerClass(V) end    
+        local T = Designs.Get(S) return T  -- Get Generic Plan
+
+    end
+
+    function PlanGenerator.GlobalCivilianTable(V, S) local _MethodName = self.LogName("Global Civilian Table")
+        Log.Debug(_MethodName, "Style: " .. tostring(S), _Debug)
+        if S ~= Class.Civilian then S = Class.Civilian end
+
+        local T = Designs.Get(S) return T  -- Get Generic Plan
+
+    end
+
+    function PlanGenerator.GlobalCrewTransportTable(V, S) local _MethodName = self.LogName("Global Crew Transport Table")
+        Log.Debug(_MethodName, "Style: " .. tostring(S), _Debug)
+        if S ~= Class.CrewTransport then S = Class.CrewTransport end
+
+        local T = Designs.Get(S) return T  -- Get Generic Plan
+
+    end
+
+    -- Environment Tables
+
+    function PlanGenerator.GlobalSataliteTable(V, S) local _MethodName = self.LogName("Global Satalite Table")
+        Log.Debug(_MethodName, "Style: " .. tostring(S), _Debug)
+        if S ~= Class.Satalite then S = Class.Satalite end
+
+        local T = Designs.Get(S) return T  -- Get Generic Plan
+
+    end
+
+--
 
 ------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------- Station Plan ---------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------
 
-function PlanGenerator.makeStationPlan(faction, styleName, seed, volume, material, overridevolume) local _MethodName = GetName("Make Station Plan")
+function PlanGenerator.Station(fac, sn, sd, vl, mt, o) local _MethodName = self.LogName("Station Plan")
 
-    Log.Debug(_MethodName, "Value (Faction): " .. tostring(faction.index) .. " = " .. tostring(faction.name), _Debug)
-    Log.Debug(_MethodName, "Value (Style): " .. tostring(styleName), _Debug)
-    Log.Debug(_MethodName, "Value (Volume): " .. tostring(volume), _Debug)
-    Log.Debug(_MethodName, "Value (Material): " .. tostring(material), _Debug)
+    Log.Debug(_MethodName, "Value (Faction): " .. tostring(fac.index) .. " = " .. tostring(fac.name), _Debug)
+    Log.Debug(_MethodName, "Value (Style): " .. tostring(sn), _Debug)
+    Log.Debug(_MethodName, "Value (Volume): " .. tostring(vl), _Debug)
+    Log.Debug(_MethodName, "Value (Material): " .. tostring(mt), _Debug)
 
-    -- default the volume override to true allowing randomized volumes by chance
-    -- set to true to use the passed volume in the function
-    if not overridevolume or overridevolume == false then volume = PlanGenerator.GetStationVolume() end
-    
-    -- If using function value, make sure its set.
-    if not volume then volume = PlanGenerator.GetStationVolume() end
+    o = o or self.GetOverride()
+    sd = sd or math.random(0xffffffff)
+    vl = o.volume or vl or Volume.Station()
+    mt = o.material or mt or PlanGenerator.selectMaterial(fac)
 
     -- Mines don't need to be huge.
-    if styleName == "Mine" then volume = 150000 end
+    if sn == Class.Mine then vl = 150000 end
+    if sn == Class.IceMine then vl = 150000 end
 
-    seed = seed or math.random(0xffffffff)
-    material = material or PlanGenerator.selectMaterial(faction)
+    Log.Debug(_MethodName, "Selected (Material): " .. tostring(mt), _Debug)
 
-    Log.Debug(_MethodName, "Selected (Material): " .. tostring(material), _Debug)
+    -- Try Global Plans First
+    local plan = PlanGenerator.GlobalStationPlan(fac, sn, vl, mt)
+    if plan then plan:scale(vec3(3, 3, 3)) return plan, sd, vl, mt end
 
-    -- Try Faction Packs First
-    local plan = FactionPacks.getStationPlan(faction, volume, material, styleName)
+    -- Try Faction Packs Second
+    local plan = FactionPacks.getStationPlan(fac, vl, mt, sn)
     if plan then plan:scale(vec3(3, 3, 3)) end
     if plan then return plan end
 
-    -- Then Try Global Plans Second
-    local plan = PlanGenerator.GlobalStationPlan(faction, styleName, volume, material)
-    if plan then plan:scale(vec3(3, 3, 3)) return plan, seed, volume, material end
-
     -- Unfortunatly Use The Game Generator
-    local style = PlanGenerator.getStationStyle(faction, styleName)
-    local plan = GeneratePlanFromStyle(style, Seed(seed), volume, 10000, nil, material)
+    local style = PlanGenerator.getStationStyle(fac, sn)
+    local plan = GeneratePlanFromStyle(style, Seed(sd), vl, 10000, nil, mt)
     plan:scale(vec3(3, 3, 3))
 
-    return plan, seed, volume, material
+    return plan, sd, vl, mt
 
 end
 
 ------------------------------------------------------------------------------------------------------------------------------
------------------------------------------------------- Standard Ship ---------------------------------------------------------
+------------------------------------------------------ Standard Ships --------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------
 
-function PlanGenerator.makeShipPlan(faction, volume, styleName, material, autooverride)
-    return PlanGenerator.makeAsyncShipPlan(nil, nil, faction, volume, styleName, material, true, autooverride)
+--[[
+    Formats the override object so it can be passed to the generator from other scripts
+    to force build a plan that doesn't take in account sector location variables.
+]]
+function PlanGenerator.GetOverride(sn, vl, mt, ti, at, cb)
+    local o = {}
+    o.style = sn
+    o.volume = vl
+    o.material = mt
+    o.title = ti
+    o.arrival = at
+    o.callback = cb
+    return o
 end
 
-function PlanGenerator.makeAsyncShipPlan(callback, values, faction, volume, styleName, material, sync, overridevolume)
-    local _MethodName = GetName("Make Async Ship Plan")
+-- Volume is a vanilla value not used in the new generator.
+-- styleName is a vanilla value only used if default game generator is used.
+-- material is a vanilla value only used if default game generator is used.
 
-    Log.Debug(_MethodName, "Override = " .. tostring(overridevolume), _Debug)
-    -- default the volume override to true allowing randomized volumes by chance
-    -- set to true to use the passed volume in the function
-    if not overridevolume or overridevolume == false then
-        volume = PlanGenerator.GetShipVolume() 
+--[[
+    fac = faction
+    vl  = volume
+    sn  = styleName
+    mt  = material
+    o   = override
+]]
+function PlanGenerator.Ship(fac, sn, o) local _MethodName = self.LogName("Ship Plan")
+    Log.Debug(_MethodName, "Value (fac): " .. tostring(fac), _Debug)
+    Log.Debug(_MethodName, "Value (sn): " .. tostring(sn), _Debug)
+    return PlanGenerator.ShipAsync(nil, nil, fac, sn, true, o)
+end
+
+--[[
+    cb  = callback
+    v   = values
+    fac = faction
+    sn  = styleName
+    s   = sync
+    o   = override
+]]
+
+function PlanGenerator.ShipAsync(cb, v, fac, sn, s, o) local _MethodName = self.LogName("Async Ship Plan")
+    o = o or self.GetOverride()
+
+    Log.Debug(_MethodName, "Value (fac): " .. tostring(fac), _Debug)
+    Log.Debug(_MethodName, "Value (sn): " .. tostring(sn), _Debug)
+
+    local code = self.CodeMilitary()   -- Defaults to Generic Ships
+    local vl = Volume.Ship() 
+    local mt = self.selectMaterial(fac)
+    local sd = math.random(0xffffffff) -- Seed
+
+    -- Ensure we have a Style we are targeting. Defaul to a Military type.
+    -- "Military" can be received when any military type ship will do.
+    if not sn or sn == "Military" then sn = Volume.MilitaryClass(vl) end
+
+    if o.volume then vl = o.volume end
+    if o.material then mt = o.material end
+    if o.style then sn = o.stlye end
+
+    if Class.IsMilitary(sn) then 
+        code = self.CodeMilitary()
+        vl = Volume.Ship() 
+
+    elseif sn == Class.Carrier then 
+        code = self.CodeCarrier()
+        vl = Volume.Carrier() 
+
+    elseif sn == Class.Miner then 
+        code = self.CodeMiner()
+        vl = Volume.Ship() 
+
+    elseif sn == Class.Freighter then 
+        code = self.CodeFreighter()
+        vl = Volume.Ship() 
+
+    elseif sn == Class.Salvager then 
+        code = self.CodeSalvager()
+        vl = Volume.Ship() 
+
+    elseif sn == Class.Civilian then 
+        code = self.CodeCivilian()
+        vl = Volume.Civilian() 
+
+    elseif sn == Class.CrewTransport then 
+        code = self.CodeCrewTransport()
+        vl = Volume.Ship() 
+
     end
 
-    Log.Debug("Plan Generator - Make Ship Plan (Code)", "Function Volume: " .. tostring(volume), _Debug)
-    local seed = math.random(0xffffffff)
-
-    if not material then
-        material = PlanGenerator.selectMaterial(faction)
+    if s then
+        return execute(code, sn, sd, vl, mt, fac.index)
+    else
+        v = v or {}
+        async(cb, code, sn, sd, vl, mt, fac.index, unpack(v))
     end
-    
+end
+
+function PlanGenerator.Wreckage(fac, sn, o) local _MethodName = self.LogName("Wreckage Plan")
+    local Wreck = Plan.New()
+
+    Wreck.Obj = self.Ship(fac, sn, o)
+    Wreck.NoStone() Wreck.Material()
+
+    return Wreck.Get()
+end
+
+--[[
+    sn = styleName
+    sd = Seed
+    vl = Volume
+    mt = Material
+    fi = Faction Index
+]]
+-- General Military Ship
+function PlanGenerator.CodeMilitary()
     local code = [[
         package.path = package.path .. ";data/scripts/lib/?.lua"
         package.path = package.path .. ";data/scripts/?.lua"
     
-        local FactionPacks = include ("factionpacks")
-        local PlanGenerator = include ("plangenerator")
-        local Log = include("SDKDebugLogging")
-    
-        function run(styleName, seed, volume, material, factionIndex, ...)
-    
-            --Log.Debug("Plan Generator - Make Async Ship Plan (Code)", "Function Volume: " .. tostring(volume), 1)
-    
-            local faction = Faction(factionIndex)
-            volume = volume or PlanGenerator.GetShipVolume()
-    
-            --Log.Debug("Plan Generator - Make Async Ship Plan (Code)", "Using Volume: " .. tostring(volume), 1)
-    
-            local plan = FactionPacks.getShipPlan(faction, volume, material)
+        local Packs = include ("factionpacks")
+        local Plans = include ("plangenerator")
+            
+        function run(sn, sd, vl, mt, fi, ...)
+
+            local fac = Faction(fi)
+            vl = vl or Plans.GetShipVolume()
+            
+            local plan = Plans.GlobalMilitaryShipPlan(fi, sn, vl, mt)
             if plan then return plan, ... end
     
-            local plan = PlanGenerator.GlobalMilitaryShipPlan(factionIndex, styleName, volume, material)
+            local plan = Packs.getShipPlan(fac, vl, mt)
             if plan then return plan, ... end
     
-            local style = PlanGenerator.getShipStyle(faction, styleName)
-            plan = GeneratePlanFromStyle(style, Seed(seed), volume, 6000, 1, material)
+            local style = Plans.getShipStyle(fac, sn)
+            plan = GeneratePlanFromStyle(style, Seed(sd), vl, 6000, 1, mt)
             return plan, ...
         end
     ]]
-
-    if sync then
-        return execute(code, styleName, seed, volume, material, faction.index)
-    else
-        values = values or {}
-        async(callback, code, styleName, seed, volume, material, faction.index, unpack(values))
-    end
+    return code
 end
 
-------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------- Miner Plan -----------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------
-
-function PlanGenerator.makeMinerPlan(faction, volume, styleName, material, autooverride)
-    return PlanGenerator.makeAsyncMinerPlan(nil, nil, faction, volume, styleName, material, true, autooverride)
-end
-
-function PlanGenerator.makeAsyncMinerPlan(callback, values, faction, volume, styleName, material, sync, overridevolume)
-    local _MethodName = GetName("Make Async Miner Plan")
-
-    Log.Debug(_MethodName, "Override = " .. tostring(overridevolume), _Debug)
-
-    -- default the volume override to true allowing randomized volumes by chance
-    -- set to true to use the passed volume in the function
-    if not overridevolume or overridevolume == false then
-        volume = PlanGenerator.GetShipVolume() 
-    end
-
-    local seed = math.random(0xffffffff)
-
-    if not material then
-        material = PlanGenerator.selectMaterial(faction)
-    end
-
+-- Carrier Military Ship
+function PlanGenerator.CodeCarrier()
     local code = [[
         package.path = package.path .. ";data/scripts/lib/?.lua"
         package.path = package.path .. ";data/scripts/?.lua"
+    
+        local Packs = include ("factionpacks")
+        local Plans = include ("plangenerator")
+            
+        function run(sn, sd, vl, mt, fi, ...)
 
-        local FactionPacks = include ("factionpacks")
-        local PlanGenerator = include ("plangenerator")
-        local Log = include("SDKDebugLogging")
-
-        function run(styleName, seed, volume, material, factionIndex, ...)
-
-            Log.Debug("Plan Generator - Make Async Miner Plan (Code)", "Function Volume: " .. tostring(volume), 1)
-
-            local faction = Faction(factionIndex)        
-            volume = volume or PlanGenerator.GetShipVolume()
-
-            local plan = FactionPacks.getMinerPlan(faction, volume, material)
+            local fac = Faction(fi)
+            vl = vl or Plans.GetShipVolume()
+    
+            local plan = Plans.GlobalCarrierPlan(fi, sn, vl, mt)
             if plan then return plan, ... end
 
-            local plan = PlanGenerator.GlobalMinerPlan(factionIndex, styleName, volume, material)
-            if plan then return plan, ... end
-
-            local style = PlanGenerator.getMinerStyle(faction, styleName)
-            local plan = GeneratePlanFromStyle(style, Seed(seed), volume, 5000, 1, material)
+            local plan = Packs.getCarrierPlan(fac, vl, mt)
+            if plan then return plan, ... end   
+    
+            local style = Plans.getCarrierStyle(fac, sn)
+            plan = GeneratePlanFromStyle(style, Seed(sd), vl, 6000, 1, mt)
 
             return plan, ...
         end
     ]]
-
-    if sync then
-        return execute(code, styleName, seed, volume, material, faction.index)
-    else
-        values = values or {}
-        async(callback, code, styleName, seed, volume, material, faction.index, unpack(values))
-    end
+    return code
 end
 
-------------------------------------------------------------------------------------------------------------------------------
------------------------------------------------------ Freighter Plan ---------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------
-
-function PlanGenerator.makeFreighterPlan(faction, volume, styleName, material, autooverride)
-    return PlanGenerator.makeAsyncFreighterPlan(nil, nil, faction, volume, styleName, material, true, autooverride)
-end
-
-function PlanGenerator.makeAsyncFreighterPlan(callback, values, faction, volume, styleName, material, sync, overridevolume)
-    local _MethodName = GetName("Make Async Freighter Plan")
-
-    Log.Debug(_MethodName, "Override = " .. tostring(overridevolume), _Debug)
-
-    -- default the volume override to true allowing randomized volumes by chance
-    -- set to true to use the passed volume in the function
-    if not overridevolume or overridevolume == false then
-        volume = PlanGenerator.GetShipVolume() 
-    end
-
-    local seed = math.random(0xffffffff)
-
-    if not material then
-        material = PlanGenerator.selectMaterial(faction)
-    end
-
+-- Civilian: Miner
+function PlanGenerator.CodeMiner()
     local code = [[
         package.path = package.path .. ";data/scripts/lib/?.lua"
         package.path = package.path .. ";data/scripts/?.lua"
+    
+        local Packs = include ("factionpacks")
+        local Plans = include ("plangenerator")
+            
+        function run(sn, sd, vl, mt, fi, ...)
 
-        local FactionPacks = include ("factionpacks")
-        local PlanGenerator = include ("plangenerator")
-        local Log = include("SDKDebugLogging")
-
-        function run(styleName, seed, volume, material, factionIndex, ...)
-
-            --Log.Debug("Plan Generator - Make Async Freighter Plan (Code)", "Function Volume: " .. tostring(volume), 1)
-
-            local faction = Faction(factionIndex)
-            volume = volume or PlanGenerator.GetShipVolume()            
-
-            local plan = FactionPacks.getFreighterPlan(faction, volume, material)
+            local fac = Faction(fi)
+            vl = vl or Plans.GetShipVolume()
+    
+            local plan = Plans.GlobalMinerPlan(fi, sn, vl, mt)
             if plan then return plan, ... end
-
-            local plan = PlanGenerator.GlobalFreighterPlan(factionIndex, styleName, volume, material)
+    
+            local plan = Packs.getMinerPlan(fac, vl, mt)
             if plan then return plan, ... end
-
-            --Log.Debug("Plan Generator - Make Async Freighter Plan (Code)", "Using Volume: " .. tostring(volume), 1)
-
-            local style = PlanGenerator.getFreighterStyle(faction, styleName)
-            local plan = GeneratePlanFromStyle(style, Seed(seed), volume, 5000, nil, material)
+            
+            local style = Plans.getMinerStyle(fac, sn)
+            plan = GeneratePlanFromStyle(style, Seed(sd), vl, 6000, 1, mt)
 
             return plan, ...
         end
     ]]
-
-    if sync then
-        return execute(code, styleName, seed, volume, material, faction.index)
-    else
-        values = values or {}
-        async(callback, code, styleName, seed, volume, material, faction.index, unpack(values))
-    end
+    return code
 end
 
-------------------------------------------------------------------------------------------------------------------------------
------------------------------------------------------- Carrier Plan ----------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------
-
-function PlanGenerator.makeAsyncCarrierPlan(callback, values, faction, volume, styleName, material, sync, overridevolume)
-    local _MethodName = GetName("Make Async Carrier Plan")
-
-    -- default the volume override to true allowing randomized volumes by chance
-    -- set to true to use the passed volume in the function
-    if not overridevolume or overridevolume == false then
-        volume = PlanGenerator.GetShipVolume() 
-    end
-
-    local seed = math.random(0xffffffff)
-
-    if not material then
-        material = PlanGenerator.selectMaterial(faction)
-    end
-
+-- Civilian: Freighter
+function PlanGenerator.CodeFreighter()
     local code = [[
         package.path = package.path .. ";data/scripts/lib/?.lua"
         package.path = package.path .. ";data/scripts/?.lua"
+    
+        local Packs = include ("factionpacks")
+        local Plans = include ("plangenerator")
+            
+        function run(sn, sd, vl, mt, fi, ...)
 
-        local FactionPacks = include ("factionpacks")
-        local PlanGenerator = include ("plangenerator")
-        local Log = include("SDKDebugLogging")
-
-        function run(styleName, seed, volume, material, factionIndex, ...)
-
-            --Log.Debug("Plan Generator - Make Async Carrier Plan (Code)", "Function Volume: " .. tostring(volume), 1)
-
-            local faction = Faction(factionIndex)
-            volume = volume or PlanGenerator.GetShipVolume()   
-
-            local plan = FactionPacks.getCarrierPlan(faction, volume, material)
+            local fac = Faction(fi)
+            vl = vl or Plans.GetShipVolume()
+    
+            local plan = Plans.GlobalFreighterPlan(fi, sn, vl, mt)
             if plan then return plan, ... end
 
-            local plan = PlanGenerator.GlobalCarrierPlan(factionIndex, styleName, volume, material)
-            if plan then return plan, ... end
-
-            local style = PlanGenerator.getCarrierStyle(faction, styleName)
-            local plan = GeneratePlanFromStyle(style, Seed(seed), volume, 5000, nil, material)
-
-            --Log.Debug("Plan Generator - Make Async Carrier Plan (Code)", "Using Volume: " .. tostring(volume), 1)
+            local plan = Packs.getFreighterPlan(fac, vl, mt)
+            if plan then return plan, ... end   
+    
+            local style = Plans.getFreighterStyle(fac, sn)
+            plan = GeneratePlanFromStyle(style, Seed(sd), vl, 6000, 1, mt)
 
             return plan, ...
         end
     ]]
+    return code
+end
 
-    if sync then
-        return execute(code, styleName, seed, volume, material, faction.index)
-    else
-        values = values or {}
-        async(callback, code, styleName, seed, volume, material, faction.index, unpack(values))
+-- Civilian: Salvager
+-- Used the Miners from the default faction pack for generated ships.
+function PlanGenerator.CodeSalvager()
+    local code = [[
+        package.path = package.path .. ";data/scripts/lib/?.lua"
+        package.path = package.path .. ";data/scripts/?.lua"
+    
+        local Packs = include ("factionpacks")
+        local Plans = include ("plangenerator")
+            
+        function run(sn, sd, vl, mt, fi, ...)
+
+            local fac = Faction(fi)
+            vl = vl or Plans.GetShipVolume()
+    
+            local plan = Plans.GlobalSalvagerPlan(fi, sn, vl, mt)
+            if plan then return plan, ... end
+
+            local plan = Packs.getMinerPlan(fac, vl, mt)
+            if plan then return plan, ... end   
+    
+            local style = Plans.getMinerStyle(fac, sn)
+            plan = GeneratePlanFromStyle(style, Seed(sd), vl, 6000, 1, mt)
+
+            return plan, ...
+        end
+    ]]
+    return code
+end
+
+-- Civilian: Salvager
+-- Used the Miners from the default faction pack for generated ships.
+function PlanGenerator.CodeCivilian()
+    local code = [[
+        package.path = package.path .. ";data/scripts/lib/?.lua"
+        package.path = package.path .. ";data/scripts/?.lua"
+    
+        local Packs = include ("factionpacks")
+        local Plans = include ("plangenerator")
+            
+        function run(sn, sd, vl, mt, fi, ...)
+
+            local fac = Faction(fi)
+            vl = vl or Plans.GetShipVolume()
+    
+            local plan = Plans.GlobalCivilianPlan(fi, sn, vl, mt)
+            if plan then return plan, ... end
+
+            local plan = Packs.getMinerPlan(fac, vl, mt)
+            if plan then return plan, ... end   
+    
+            local style = Plans.getMinerStyle(fac, sn)
+            plan = GeneratePlanFromStyle(style, Seed(sd), vl, 6000, 1, mt)
+
+            return plan, ...
+        end
+    ]]
+    return code
+end
+
+-- Civilian: Salvager
+-- Used the Generic ship from the default faction pack for generated ships.
+function PlanGenerator.CodeCrewTransport()
+    local code = [[
+        package.path = package.path .. ";data/scripts/lib/?.lua"
+        package.path = package.path .. ";data/scripts/?.lua"
+    
+        local Packs = include ("factionpacks")
+        local Plans = include ("plangenerator")
+            
+        function run(sn, sd, vl, mt, fi, ...)
+
+            local fac = Faction(fi)
+            vl = vl or Plans.GetShipVolume()
+    
+            local plan = Plans.GlobalCrewTransportPlan(fi, sn, vl, mt)
+            if plan then return plan, ... end
+
+            local plan = Packs.getShipPlan(fac, vl, mt)
+            if plan then return plan, ... end   
+    
+            local style = Plans.getShipStyle(fac, sn)
+            plan = GeneratePlanFromStyle(style, Seed(sd), vl, 6000, 1, mt)
+
+            return plan, ...
+        end
+    ]]
+    return code
+end
+
+--function PlanGenerator.Fighter(fi, sd, mt, sn)
+--    sn = sn or Class.FighterArmed
+--end
+
+------------------------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------- Environment ---------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------
+
+function PlanGenerator.Gate(seed, color1, color2, color3)
+
+    if Plan.Load("data/plans/Default/Environment/Gate 0.xml") then
+         return Plan.Get()   
+    else return PlanGenerator.old_makeGatePlan(seed, color1, color2, color3)
     end
+
+end
+
+------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------- Redirects ------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------
+
+--[[
+    Developer Notes:
+    - Redirect the old generator calls to the new structure...
+    - Eventually remove these and force update the code that depends on these. (When I can do more work on this)
+]]
+function PlanGenerator.makeShipPlan(faction, volume, styleName, material, override)
+    if override == true then override = nil end
+    return self.ShipAsync(nil, nil, faction, styleName, true, override)
+end
+
+function PlanGenerator.makeAsyncShipPlan(callback, values, faction, volume, styleName, material, sync, override)
+    return self.ShipAsync(callback, values, faction, styleName, sync, override)
+end
+
+function PlanGenerator.makeMinerPlan(faction, volume, styleName, material, override)
+    return self.ShipAsync(nil, nil, faction, "Miner", true, override)
+end
+
+function PlanGenerator.makeAsyncMinerPlan(callback, values, faction, volume, styleName, material, sync, override)
+    return self.ShipAsync(callback, values, faction, "Miner", sync, override)
+end
+
+function PlanGenerator.makeFreighterPlan(faction, volume, styleName, material, override)
+    return self.ShipAsync(nil, nil, faction, "Freighter", true, override)
+end
+
+function PlanGenerator.makeAsyncFreighterPlan(callback, values, faction, volume, styleName, material, sync, override)
+    return self.ShipAsync(callback, values, faction, "Freighter", sync, override)
+end
+
+-- No makeCarrierPlan function
+function PlanGenerator.makeAsyncCarrierPlan(callback, values, faction, volume, styleName, material, sync, override)
+    return self.ShipAsync(callback, values, faction, "Carrier", sync, override)
+end
+
+function PlanGenerator.makeStationPlan(fac, sn, sd, vl, mt, o)
+    return PlanGenerator.Station(fac, sn, sd, vl, mt, o)
+end
+
+function PlanGenerator.makeGatePlan(seed, color1, color2, color3)
+    return self.Gate(seed, color1, color2, color3)
 end

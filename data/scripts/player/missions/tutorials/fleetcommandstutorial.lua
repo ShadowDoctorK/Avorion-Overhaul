@@ -1,3 +1,8 @@
+--[[
+    Dev Notes:
+    - This script only works on version before 2.0
+]]
+
 --[[ 
 Changes: 
  - Lady will spawn as a slot 4 ship.

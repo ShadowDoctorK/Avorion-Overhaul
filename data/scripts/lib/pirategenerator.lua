@@ -26,18 +26,22 @@ end
 PirateGenerator.old_create = PirateGenerator.create
 function PirateGenerator.create(position, volumeFactor, title)
     
+    local Volume = PlanGenerator.GetVolume()
+
     position = position or Matrix()
     local x, y = Sector():getCoordinates()
     PirateGenerator.pirateLevel = PirateGenerator.pirateLevel or Balancing_GetPirateLevel(x, y)
 
     local faction = Galaxy():getPirateFaction(PirateGenerator.pirateLevel)
 
-    volume = Rand.Int(PlanGenerator.VolumeShips[5], PlanGenerator.VolumeShips[6]) * volumeFactor
+    volume = Volume.Get(5, 6) * volumeFactor
 
     --Multiply Pirates by three till we make a clean generator. I reduce them to 1/3 the volume in the plan generator.
     volume = volume * 3
 
-    local plan = PlanGenerator.makeShipPlan(faction, volume, title, nil, true)
+    local o = PlanGenerator.GetOverride("Military", volume, nil, title)
+
+    local plan = PlanGenerator.Ship(faction, "Military", o)
     local ship = Sector():createShip(faction, "", plan, position)
 
     PirateGenerator.addPirateEquipment(ship, title)

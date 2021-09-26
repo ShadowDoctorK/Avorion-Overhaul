@@ -1,3 +1,10 @@
+--[[
+    Developer Notes:
+    - Need to adjust the Overcharge Jumps to allow them to store up some charges a bit.
+    - Need to adjust the Jump color to Red when they are doing Emergency jumps when the 5% chance is triggered.
+]]
+
+
 package.path = package.path .. ";data/scripts/lib/?.lua"
 
 include ("randomext")
@@ -16,6 +23,7 @@ self.CascadeLimit = 0
 self.ChargeCounter = 0
 self.ChargeLimit = 0
 self.TryJump = false
+self.Purple = ColorRGB(0.811, 0.145, 0.913)     -- Used for Charged Jumps
 
 function Quantum.initialize()
     if onServer() then
@@ -104,21 +112,25 @@ function Quantum.Jump()
     entity.translation = dvec3(entity.translationf + direction * distance)
 end
 
+-- Fixed this function to use the new 2.0 call for the jump animation
 function Quantum.animation(direction)
-    Sector():createHyperspaceAnimation(Entity(), direction, ColorRGB(0.6, 0.5, 0.3), 0.2)
+    local _Version = GameVersion() if _Version.major > 1 then
+         Sector():createHyperspaceJumpAnimation(Entity(), direction, self.Purple, 0.2)
+    else Sector():createHyperspaceAnimation(Entity(), direction, self.Purple, 0.2)
+    end
+
 end
 
 function Quantum.onHit()
     self.TryJump = true
     if self.CascadeCharge > 0 then
+        --print("Jumping Via Casecade Charge Chance...")
         deferredCallback(random():getFloat(0, 1.5), "updateServer", 0)
-    end
-
-    if self.OverCharge > 0 and random():test(0.5) then
+    elseif self.OverCharge > 0 and random():test(0.5) then
         --print("Jumping Via Over Charge Chance...")
         self.cascade(self.OverCharge)
         self.OverCharge = 0
-    elseif self.FallbackJump and random():test(0.005) then
+    elseif self.FallbackJump and random():test(0.05) then
         --print("Jumping Via Fall Back Chance...")
         self.cascade(3)
         self.FallbackJump = false

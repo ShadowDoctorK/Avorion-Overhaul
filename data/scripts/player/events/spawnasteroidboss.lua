@@ -92,6 +92,9 @@ if onServer() then
     end
     ]]
 
+    local Volume = include("SDKGlobalDesigns - Volumes")
+    local Equip = include("SDKGlobalDesigns - Equipment")
+
     -- Saved Vanilla Function
     SpawnAsteroidBoss.old_createBoss = SpawnAsteroidBoss.createBoss
     function SpawnAsteroidBoss.createBoss()
@@ -105,11 +108,14 @@ if onServer() then
         -- Slot 9 to 12
         local Chances = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 250, 500, 550, 1000, 1000, 1000}
         -- Get Volume Ranges
-        local volume = PlanGenerator.GetShipVolume(Chances)
+        local volume = Volume.Ship(Chances)
         -- Override the Volume Passing Custom Volume
-        local plan = PlanGenerator.makeShipPlan(faction, volume, "Boss 8055", nil, true)
+        local o = PlanGenerator.GetOverride("Military", volume, nil, "Boss 8055")
+        local plan = PlanGenerator.Ship(faction, "Boss 8055", o)
+
         local boss = Sector():createShip(faction, "", plan, Matrix(), EntityArrivalType.Jump)
-        boss.crew = boss.idealCrew
+        boss:addScript("icon.lua", "data/textures/icons/pixel/enemy-strength-indicators/skull.png")
+        boss.crew = boss.minCrew
         boss.shieldDurability = boss.shieldMaxDurability
         AddDefaultShipScripts(boss)
         SetBoardingDefenseLevel(boss)

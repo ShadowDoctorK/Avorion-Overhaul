@@ -1,134 +1,30 @@
+--[[
+    Developer Notes:
+    - Rebuild this entirely...
+]]
+
 local Log = include("SDKDebugLogging")
 local Rand = include("SDKUtilityRandom")
+local Volume = include("SDKGlobalDesigns - Volumes")
 
-local _ModName = "Async Ship Generator"
+-- Logging Setup
+    local Log = include("SDKDebugLogging")
+    local _ModName = "Async Ship Generator"
+    local _Debug = 0
+-- End Logging
 
--- Fucntion to build Methodname
-function GetName(n)
-    return _ModName .. " - " .. n
-end
+-- Custom Functions
 
-local _Debug = 0
 
-----------------------------------------------------------------------------------------------------------
------------------------------------------ Added Funcitons ------------------------------------------------
-----------------------------------------------------------------------------------------------------------
 
-AsyncShipGenerator.VolumeShips = {}
-AsyncShipGenerator.VolumeShips[1]  = 1       -- Slot 1
-AsyncShipGenerator.VolumeShips[2]  = 51      -- Slot 2: 51660m3
-AsyncShipGenerator.VolumeShips[3]  = 128     -- Slot 3: 131000m3
-AsyncShipGenerator.VolumeShips[4]  = 320     -- Slot 4
-AsyncShipGenerator.VolumeShips[5]  = 800     -- Slot 5
-AsyncShipGenerator.VolumeShips[6]  = 2000    -- Slot 6
-AsyncShipGenerator.VolumeShips[7]  = 5000    -- Slot 7
-AsyncShipGenerator.VolumeShips[8]  = 12500   -- Slot 8
-AsyncShipGenerator.VolumeShips[9]  = 19764   -- Slot 9
-AsyncShipGenerator.VolumeShips[10] = 31250   -- Slot 10
-AsyncShipGenerator.VolumeShips[11] = 43065   -- Slot 11
-AsyncShipGenerator.VolumeShips[12] = 59348   -- Slot 12
-AsyncShipGenerator.VolumeShips[13] = 78125   -- Slot 13
-AsyncShipGenerator.VolumeShips[14] = 107554  -- Slot 14
-AsyncShipGenerator.VolumeShips[15] = 148371  -- Slot 15
-AsyncShipGenerator.VolumeShips[16] = 250000  -- Titan Scale / Max Size Limit For Slot 15 
-AsyncShipGenerator.VolumeShips[17] = 500000  -- Max Size Limit for AI Titan Class
+--
 
-function AsyncShipGenerator:GetShipVolume(override)
-    local _MethodName = GetName("Get Ship Volume")
 
-    if not override then
-        Chance = override
-    end
-
-    -- Chance Number Must be Matched with AsyncShipGenerator.VolumeShips 
-    -- Leave out the last item in AsyncShipGenerator.VolumeShips because
-    -- it will act as the upper limit for plan volume
-    local Chance = {}
-    Chance[1]   = 0
-    Chance[2]   = 0
-    Chance[3]   = 0
-    Chance[4]   = 40    -- 40 Ships
-    Chance[5]   = 80    -- 40 Ships
-    Chance[6]   = 150   -- 70 Ships
-    Chance[7]   = 300   -- 150 Ships
-    Chance[8]   = 450   -- 110 Ships
-    Chance[9]   = 560   -- 100 Ships
-    Chance[10]  = 660   -- 100 Ships
-    Chance[11]  = 740   -- 80 Ships
-    Chance[12]  = 800   -- 60 Ships
-    Chance[13]  = 870   -- 70 Ships
-    Chance[14]  = 940   -- 70 Ships
-    Chance[15]  = 999   -- 59 Ships
-    Chance[16]  = 1000  -- 1 Ship / 1000 Ships
-
-    local Roll = Rand.Int(1, 1000)
-    local Volume = 1
-
-    Log.Debug(_MethodName, "Rolled Dice: " .. tostring(Roll), _Debug)
-
-    if Roll < Chance[1] then            
-        Volume = Rand.Int(AsyncShipGenerator.VolumeShips[1], AsyncShipGenerator.VolumeShips[2] -1)
-        Log.Debug(_MethodName, "Slot 1 Volume: " .. tostring(Volume), _Debug)
-    elseif Roll < Chance[2] then        
-        Volume = Rand.Int(AsyncShipGenerator.VolumeShips[2], AsyncShipGenerator.VolumeShips[3] -1)
-        Log.Debug(_MethodName, "Slot 1 Volume: " .. tostring(Volume), _Debug)
-    elseif Roll < Chance[3] then       
-        Volume = Rand.Int(AsyncShipGenerator.VolumeShips[3], AsyncShipGenerator.VolumeShips[4] -1)
-        Log.Debug(_MethodName, "Slot 2 Volume: " .. tostring(Volume), _Debug)
-    elseif Roll < Chance[4] then        
-        Volume = Rand.Int(AsyncShipGenerator.VolumeShips[4], AsyncShipGenerator.VolumeShips[5] -1)
-        Log.Debug(_MethodName, "Slot 3 Volume: " .. tostring(Volume), _Debug)
-    elseif Roll < Chance[5] then        
-        Volume = Rand.Int(AsyncShipGenerator.VolumeShips[5], AsyncShipGenerator.VolumeShips[6] -1)
-        Log.Debug(_MethodName, "Slot 4 Volume: " .. tostring(Volume), _Debug)
-    elseif Roll < Chance[6] then        
-        Volume = Rand.Int(AsyncShipGenerator.VolumeShips[6], AsyncShipGenerator.VolumeShips[7] -1)        
-        Log.Debug(_MethodName, "Slot 5 Volume: " .. tostring(Volume), _Debug)
-    elseif Roll < Chance[7] then        
-        Volume = Rand.Int(AsyncShipGenerator.VolumeShips[7], AsyncShipGenerator.VolumeShips[8] -1)
-        Log.Debug(_MethodName, "Slot 6 Volume: " .. tostring(Volume), _Debug)
-    elseif Roll < Chance[8] then        
-        Volume = Rand.Int(AsyncShipGenerator.VolumeShips[8], AsyncShipGenerator.VolumeShips[9] -1)
-        Log.Debug(_MethodName, "Slot 7 Volume: " .. tostring(Volume), _Debug)
-    elseif Roll < Chance[9] then        
-        Volume = Rand.Int(AsyncShipGenerator.VolumeShips[9], AsyncShipGenerator.VolumeShips[10] -1)
-        Log.Debug(_MethodName, "Slot 8 Volume: " .. tostring(Volume), _Debug)
-    elseif Roll < Chance[10] then       
-        Volume = Rand.Int(AsyncShipGenerator.VolumeShips[10], AsyncShipGenerator.VolumeShips[11] -1)
-        Log.Debug(_MethodName, "Slot 9 Volume: " .. tostring(Volume), _Debug)
-    elseif Roll < Chance[11] then       
-        Volume = Rand.Int(AsyncShipGenerator.VolumeShips[11], AsyncShipGenerator.VolumeShips[12] -1)
-        Log.Debug(_MethodName, "Slot 10 Volume: " .. tostring(Volume), _Debug)
-    elseif Roll < Chance[12] then       
-        Volume = Rand.Int(AsyncShipGenerator.VolumeShips[12], AsyncShipGenerator.VolumeShips[13] -1)
-        Log.Debug(_MethodName, "Slot 12 Volume: " .. tostring(Volume), _Debug)
-    elseif Roll < Chance[13] then       
-        Volume = Rand.Int(AsyncShipGenerator.VolumeShips[13], AsyncShipGenerator.VolumeShips[14] -1)
-        Log.Debug(_MethodName, "Slot 13 Volume: " .. tostring(Volume), _Debug)
-    elseif Roll < Chance[14] then       
-        Volume = Rand.Int(AsyncShipGenerator.VolumeShips[14], AsyncShipGenerator.VolumeShips[15] -1)
-        Log.Debug(_MethodName, "Slot 14 Volume: " .. tostring(Volume), _Debug)
-    elseif Roll < Chance[15] then       
-        Volume = Rand.Int(AsyncShipGenerator.VolumeShips[15], AsyncShipGenerator.VolumeShips[16] -1)
-        Log.Debug(_MethodName, "Slot 15 Volume: " .. tostring(Volume), _Debug)
-    elseif Roll <= Chance[16] then       
-        Volume = Rand.Int(AsyncShipGenerator.VolumeShips[16], AsyncShipGenerator.VolumeShips[17])   
-        Log.Debug(_MethodName, "Slot 15 ++ Volume: " .. tostring(Volume), _Debug) 
-    else                                
-        Volume = Rand.Int(AsyncShipGenerator.VolumeShips[1], AsyncShipGenerator.VolumeShips[15])
-        Log.Debug(_MethodName, "Something Went Wrong, Selecting Random Slot Volume: " .. tostring(Volume), _Debug)
-    end
-
-    Log.Debug(_MethodName, "Selected Volume: " .. tostring(Volume), _Debug)
-
-    return Volume / 2
-
-end
 
 -- New function
 function AsyncShipGenerator:createCustomMilitaryShip(faction, position, volume)
     position = position or Matrix()
-    volume = volume or self:GetShipVolume(Chance)
+    volume = volume or Volume.Ship()
     
     PlanGenerator.makeAsyncShipPlan("_ship_generator_on_military_plan_generated", {self.generatorId, position, faction.index}, faction, volume)
     self:shipCreationStarted()
@@ -142,7 +38,7 @@ end
 AsyncShipGenerator.old_createShip = AsyncShipGenerator.createShip 
 function AsyncShipGenerator:createShip(_Faction, _Position, _Volume, _AutoOverride)
     position = position or Matrix()
-    _Volume = _Volume or self:GetShipVolume()
+    _Volume = _Volume or Volume.Ship()
 
     PlanGenerator.makeAsyncShipPlan("_ship_generator_on_ship_plan_generated", {self.generatorId, _Position, _Faction.index}, _Faction, _Volume, _AutoOverride)
     self:shipCreationStarted()
@@ -183,7 +79,7 @@ function AsyncShipGenerator:createDefender(faction, position)
     Chance[15]  = 997   -- 57 Ships
     Chance[16]  = 1000  -- 3 Ship / 1000 Ships
 
-    local volume = self:GetShipVolume(Chance)
+    local volume = Volume.Ship(Chance)
 
     PlanGenerator.makeAsyncShipPlan("_ship_generator_on_defender_plan_generated", {self.generatorId, position, faction.index}, faction, volume)
     self:shipCreationStarted()
@@ -246,7 +142,7 @@ function AsyncShipGenerator:createCarrier(faction, position, fighters)
     Chance[15]  = 993   -- 173 Ships
     Chance[16]  = 1000  -- 7 Ship / 1000 Ships
 
-    local volume = self:GetShipVolume(Chance)
+    local volume = Volume.Ship(Chance)
     
     PlanGenerator.makeAsyncCarrierPlan("_ship_generator_on_carrier_plan_generated", {self.generatorId, position, faction.index, fighters}, faction, volume)
     self:shipCreationStarted()
@@ -271,7 +167,7 @@ end
 AsyncShipGenerator.old_createMilitaryShip = AsyncShipGenerator.createMilitaryShip 
 function AsyncShipGenerator:createMilitaryShip(faction, position, volume)
     position = position or Matrix()
-    volume = self:GetShipVolume(Chance) -- Ignores volume arg
+    volume = Volume.Ship() -- Ignores volume arg
 
     PlanGenerator.makeAsyncShipPlan("_ship_generator_on_military_plan_generated", {self.generatorId, position, faction.index}, faction, volume)
     self:shipCreationStarted()
@@ -295,7 +191,7 @@ end
 AsyncShipGenerator.old_createTorpedoShip =    AsyncShipGenerator.createTorpedoShip
 function AsyncShipGenerator:createTorpedoShip(faction, position, volume)
     position = position or Matrix()
-    volume = self:GetShipVolume(Chance) -- Ignores volume arg
+    volume = Volume.Ship() -- Ignores volume arg
 
     PlanGenerator.makeAsyncShipPlan("_ship_generator_on_torpedo_plan_generated", {self.generatorId, position, faction.index}, faction, volume)
     self:shipCreationStarted()
@@ -324,7 +220,7 @@ function AsyncShipGenerator:createDisruptorShip(faction, position, volume)
     end
 
     position = position or Matrix()
-    volume = self:GetShipVolume(Chance) -- Ignores volume arg
+    volume = Volume.Ship() -- Ignores volume arg
 
     PlanGenerator.makeAsyncShipPlan("_ship_generator_on_disruptor_plan_generated", {self.generatorId, position, faction.index}, faction, volume)
     self:shipCreationStarted()
@@ -353,7 +249,7 @@ function AsyncShipGenerator:createCIWSShip(faction, position, volume)
     end
 
     position = position or Matrix()
-    volume = self:GetShipVolume(Chance) -- Ignores volume arg
+    volume = Volume.Ship() -- Ignores volume arg
 
     PlanGenerator.makeAsyncShipPlan("_ship_generator_on_ciws_plan_generated", {self.generatorId, position, faction.index}, faction, volume)
     self:shipCreationStarted()
@@ -377,7 +273,7 @@ end
 AsyncShipGenerator.old_createPersecutorShip = AsyncShipGenerator.createPersecutorShip
 function AsyncShipGenerator:createPersecutorShip(faction, position, volume)
     position = position or Matrix()
-    volume = self:GetShipVolume(Chance) -- Ignores volume arg
+    volume = Volume.Ship() -- Ignores volume arg
 
     PlanGenerator.makeAsyncShipPlan("_ship_generator_on_persecutor_plan_generated", {self.generatorId, position, faction.index}, faction, volume)
     self:shipCreationStarted()
@@ -401,7 +297,7 @@ end
 AsyncShipGenerator.old_createBlockerShip =    AsyncShipGenerator.createBlockerShip
 function AsyncShipGenerator:createBlockerShip(faction, position, volume)
     position = position or Matrix()
-    volume = self:GetShipVolume(Chance) -- Ignores volume arg
+    volume = Volume.Ship() -- Ignores volume arg
 
     PlanGenerator.makeAsyncShipPlan("_ship_generator_on_blocker_plan_generated", {self.generatorId, position, faction.index}, faction, volume)
     self:shipCreationStarted()
@@ -440,7 +336,7 @@ function AsyncShipGenerator:createFlagShip(faction, position, volume)
     Chance[15]  = 950   -- 300 Ships
     Chance[16]  = 50    -- 50 Ships / 1000 Ships
 
-    volume = self:GetShipVolume(Chance) -- Ignores volume arg
+    volume = Volume.Ship(Chance) -- Ignores volume arg
 
     PlanGenerator.makeAsyncShipPlan("_ship_generator_on_flagship_plan_generated", {self.generatorId, position, faction.index}, faction, volume)
     self:shipCreationStarted()
@@ -483,7 +379,7 @@ function AsyncShipGenerator:createTradingShip(faction, position, volume)
     Chance[15]  = 1000  -- 0 Ships
     Chance[16]  = 1000  -- 0 Ship / 1000 Ships
 
-    local volume = self:GetShipVolume(Chance)
+    local volume = Volume.Ship(Chance)
 
     PlanGenerator.makeAsyncShipPlan("_ship_generator_on_trader_plan_generated", {self.generatorId, position, faction.index}, faction, volume)
     self:shipCreationStarted()
@@ -539,7 +435,7 @@ function AsyncShipGenerator:createFreighterShip(_Faction, _Position, _Volume, _A
     Chance[15]  = 1000
     Chance[16]  = 1000 -- 0 Ship / 1000 Ships
 
-    _Volume = _Volume or self:GetShipVolume()
+    _Volume = _Volume or Volume.Ship(Chance)
 
     PlanGenerator.makeAsyncFreighterPlan("_ship_generator_on_freighter_plan_generated", {self.generatorId, _Position, _Faction.index}, _Faction, _Volume, _AutoOverride)
     self:shipCreationStarted()
@@ -568,7 +464,7 @@ function AsyncShipGenerator:createMiningShip(_Faction, _Position, _Volume, _Auto
     Chance[15]  = 1000
     Chance[16]  = 1000 -- 0 Ship / 1000 Ships
 
-    _Volume = _Volume or self:GetShipVolume()
+    _Volume = _Volume or Volume.Ship(Chance)
 
     PlanGenerator.makeAsyncMinerPlan("_ship_generator_on_mining_plan_generated", {self.generatorId, _Position, _Faction.index}, _Faction, _Volume, _AutoOverride)
     self:shipCreationStarted()

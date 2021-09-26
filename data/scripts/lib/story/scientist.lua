@@ -102,6 +102,9 @@ function Scientist.createLightningTurret()
 end
 ]]
 
+local Volume = include("SDKGlobalDesigns - Volumes")
+local Equip = include("SDKGlobalDesigns - Equipment")
+
 -- Save Vanilla Function
 Scientist.old_spawn = Scientist.spawn 
 function Scientist.spawn()
@@ -119,10 +122,12 @@ function Scientist.spawn()
     local Chances = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 250, 500, 750, 1000, 1000}
 
     -- Get Volume Ranges
-    local volume = PlanGenerator.GetShipVolume(Chances)
+    local volume = Volume.Ship(Chances)
 
-    -- Override the Volume Passing Custom Volume
-    local plan = PlanGenerator.makeShipPlan(faction, volume, "Boss Scientist", nil, true)
+    local o = PlanGenerator.GetOverride("Military", volume, nil, "Boss Scientist")
+
+    local plan = PlanGenerator.Ship(faction, "Military", o)
+
     local boss = Sector():createShip(faction, "", plan, position, EntityArrivalType.Jump)
 
     boss.crew = boss.idealCrew
@@ -134,9 +139,11 @@ function Scientist.spawn()
 
     local turret = Scientist.createLightningTurret()
     ShipUtility.addTurretsToCraft(boss, turret, 15, 15)
+    ShipUtility.addTurretsToCraft(boss, turret, 15, 15)
 
     boss.title = "Mobile Energy Lab"%_T
     boss.damageMultiplier = 1000
+    boss:addScript("icon.lua", "data/textures/icons/pixel/enemy-strength-indicators/skull.png")
 
     ShipAI(boss.index):setAggressive()
 

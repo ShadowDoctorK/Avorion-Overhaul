@@ -254,17 +254,16 @@ function SectorGenerator:createUnstrippedWreckage(faction, plan, breaks)
     return unpack(wreckages)
 end
 
---[[
 
 function SectorGenerator:createGates(distanceFromSectorCenter)
-    distanceFromSectorCenter = distanceFromSectorCenter or 3000
-
+    distanceFromSectorCenter = distanceFromSectorCenter or 5000
+    
     local sector = Sector()
     sector:setValue("gates2.0", true)
-
+    
     local map = GatesMap(Server().seed)
     local targets = map:getConnectedSectors({x = self.coordX, y = self.coordY})
-
+    
     for _, target in pairs(targets) do
         -- get start sector
         local firstPlayer = Player(1)
@@ -272,7 +271,7 @@ function SectorGenerator:createGates(distanceFromSectorCenter)
         if firstPlayer then
             startSectorX, startSectorY = firstPlayer:getHomeSectorCoordinates()
         end
-
+        
         local faction
         if startSectorX and startSectorX == target.x and startSectorY == target.y then
             -- use nearest faction for the start sector
@@ -280,74 +279,75 @@ function SectorGenerator:createGates(distanceFromSectorCenter)
         else
             faction = Galaxy():getLocalFaction(target.x, target.y)
         end
-
+        
         if faction ~= nil then
-
+            
             local desc = EntityDescriptor()
             desc:addComponents(
-               ComponentType.Plan,
-               ComponentType.BspTree,
-               ComponentType.Intersection,
-               ComponentType.Asleep,
-               ComponentType.DamageContributors,
-               ComponentType.BoundingSphere,
-               ComponentType.PlanMaxDurability,
-               ComponentType.Durability,
-               ComponentType.BoundingBox,
-               ComponentType.Velocity,
-               ComponentType.Physics,
-               ComponentType.Scripts,
-               ComponentType.ScriptCallback,
-               ComponentType.Title,
-               ComponentType.Owner,
-               ComponentType.FactionNotifier,
-               ComponentType.WormHole,
-               ComponentType.EnergySystem,
-               ComponentType.EntityTransferrer
+                ComponentType.Plan,
+                ComponentType.BspTree,
+                ComponentType.Intersection,
+                ComponentType.Asleep,
+                ComponentType.DamageContributors,
+                ComponentType.BoundingSphere,
+                ComponentType.PlanMaxDurability,
+                ComponentType.Durability,
+                ComponentType.BoundingBox,
+                ComponentType.Velocity,
+                ComponentType.Physics,
+                ComponentType.Scripts,
+                ComponentType.ScriptCallback,
+                ComponentType.Title,
+                ComponentType.Owner,
+                ComponentType.FactionNotifier,
+                ComponentType.WormHole,
+                ComponentType.EnergySystem,
+                ComponentType.EntityTransferrer
             )
-
+            
             local styleGenerator = StyleGenerator(faction.index)
             local c1 = styleGenerator.factionDetails.baseColor
             local c2 = ColorRGB(0.25, 0.25, 0.25)
             local c3 = styleGenerator.factionDetails.paintColor
             c1 = ColorRGB(c1.r, c1.g, c1.b)
             c3 = ColorRGB(c3.r, c3.g, c3.b)
-
+            
             local plan = PlanGenerator.makeGatePlan(Seed(faction.index) + Server().seed, c1, c2, c3)
-
+            
             local dir = vec3(target.x - self.coordX, 0, target.y - self.coordY)
             normalize_ip(dir)
-
+            
             local position = MatrixLookUp(dir, vec3(0, 1, 0))
             position.pos = dir * distanceFromSectorCenter
-
+            
             desc:setMovePlan(plan)
             desc.position = position
             desc.factionIndex = faction.index
             desc.invincible = true
             desc:addScript("data/scripts/entity/gate.lua")
-
+            
             local wormhole = desc:getComponent(ComponentType.WormHole)
             wormhole:setTargetCoordinates(target.x, target.y)
-            wormhole.visible = false
-            wormhole.visualSize = 50
-            wormhole.passageSize = 50
+            wormhole.visible = true
+            wormhole.visualSize = 75
+            wormhole.passageSize = 80
             wormhole.oneWay = true
-
+            
             sector:createEntity(desc)
         end
     end
-
-
+    
+    
 end
 
+--[[
 function SectorGenerator:createAncientGates()
-
+    
     local map = AncientGatesMap(Server().seed)
     local targets = map:getConnectedSectors({x = self.coordX, y = self.coordY})
-
+    
     for _, target in pairs(targets) do
-
+        
         -- print ("%i %i", target.x, target.y)
 
         local desc = EntityDescriptor()
@@ -398,5 +398,99 @@ function SectorGenerator:createAncientGates()
     end
 
 
+end
+
+function SectorGenerator:createShipyard(faction)
+    local station = self:createStation(faction, "data/scripts/entity/merchants/shipyard.lua");
+    station:addScript("data/scripts/entity/merchants/repairdock.lua")
+    
+    station:addScript("data/scripts/entity/merchants/consumer.lua", "Shipyard"%_t, unpack(ConsumerGoods.Shipyard()))
+    
+    return station
+end
+]]
+
+-- Added extra dedicated turret merchants
+function SectorGenerator:createEquipmentDock(faction)
+    local station = self:createStation(faction, "data/scripts/entity/merchants/equipmentdock.lua");
+
+    -- Custom Local Merchant tabs
+    station:addScript("data/scripts/entity/merchants/SDKMerchTurretLocal1.lua")  -- Allows Modded items
+    station:addScript("data/scripts/entity/merchants/SDKMerchTurretLocal2.lua")  -- Allows Modded items
+
+    -- station:addScript("data/scripts/entity/merchants/turretmerchant.lua")
+    station:addScript("data/scripts/entity/merchants/fightermerchant.lua")
+    station:addScript("data/scripts/entity/merchants/utilitymerchant.lua")
+
+    -- Add turret options
+    station:addScript("data/scripts/entity/merchants/SDKMerchTurretPDC.lua")
+    station:addScript("data/scripts/entity/merchants/SDKMerchTurretPDL.lua")
+    station:addScript("data/scripts/entity/merchants/SDKMerchTurretBolter.lua")
+    station:addScript("data/scripts/entity/merchants/SDKMerchTurretPlasma.lua")
+    station:addScript("data/scripts/entity/merchants/SDKMerchTurretPulseCannon.lua")
+    station:addScript("data/scripts/entity/merchants/SDKMerchTurretRocket.lua")
+    station:addScript("data/scripts/entity/merchants/SDKMerchTurretRailgun.lua")
+    station:addScript("data/scripts/entity/merchants/SDKMerchTurretLightning.lua")
+    station:addScript("data/scripts/entity/merchants/SDKMerchTurretCannon.lua")
+
+    station:addScript("data/scripts/entity/merchants/consumer.lua", "Equipment Dock"%_t, unpack(ConsumerGoods.EquipmentDock()))
+
+    local x, y = Sector():getCoordinates()
+    local dist2 = x * x + y * y
+    if dist2 < 380 * 380 then
+        station:addScript("data/scripts/entity/merchants/torpedomerchant.lua")
+    end
+
+    ShipUtility.addArmedTurretsToCraft(station)
+
+    return station
+end
+
+--[[
+function SectorGenerator:createRepairDock(faction)
+    local station = self:createStation(faction, "data/scripts/entity/merchants/repairdock.lua");
+
+    station:addScript("data/scripts/entity/merchants/consumer.lua", "Repair Dock"%_t, unpack(ConsumerGoods.RepairDock()))
+
+    return station
+end
+
+function SectorGenerator:createMilitaryBase(faction)
+    local station = self:createStation(faction, "data/scripts/entity/merchants/militaryoutpost.lua");
+
+    station:addScript("data/scripts/entity/merchants/consumer.lua", "Military Outpost"%_t, unpack(ConsumerGoods.MilitaryOutpost()))
+    station:addScript("data/scripts/entity/ai/patrol.lua")
+
+    ShipUtility.addArmedTurretsToCraft(station)
+
+    -- add fighters
+    local hangar = Hangar(station)
+    hangar:addSquad("Alpha")
+    hangar:addSquad("Beta")
+    hangar:addSquad("Gamma")
+    hangar:addSquad("Delta")
+
+    local generator = SectorFighterGenerator()
+    generator.factionIndex = faction.index
+
+    local numFighters = 0
+    for squad = 0, 3 do
+        local fighter = generator:generateArmed(faction:getHomeSectorCoordinates())
+        for i = 1, 12 do
+            hangar:addFighter(squad, fighter)
+        end
+    end
+
+    station.crew = station.idealCrew
+
+    return station
+end
+
+function SectorGenerator:createResearchStation(faction)
+    local station = self:createStation(faction, "data/scripts/entity/merchants/researchstation.lua");
+
+    station:addScript("data/scripts/entity/merchants/consumer.lua", "Research Station"%_t, unpack(ConsumerGoods.ResearchStation()))
+
+    return station
 end
 ]]

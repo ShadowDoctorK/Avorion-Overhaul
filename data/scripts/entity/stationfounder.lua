@@ -7,13 +7,13 @@ function InsertStationData(station)
     end
 
     if index == -1 then 
-        --print("Inserting Station: " .. tostring(station.name))
+        print("Inserting Station: " .. tostring(station.name))
         index = #StationFounder.stations + 1 
     else
-        --print("Overriding Station: " .. tostring(station.name))
+        print("Overriding Station: " .. tostring(station.name))
     end
 
-    --print("Index: " .. tostring(index))
+    print("Index: " .. tostring(index))
     StationFounder.stations[index] = station
 end
 
@@ -42,6 +42,35 @@ InsertStationData({
         {script = "data/scripts/entity/merchants/SDKMerchMiningTurret.lua"}
     },
     price = 15000000
+})
+
+-- Override Equipment Dock
+InsertStationData({
+    name = "Equipment Dock"%_t,
+    tooltip = "Buys and sells upgrades, turrets and fighters. The owner of the equipment dock gets 20% of the money of every transaction, as well as cheaper prices."%_t .. "\n\n" ..
+              "The population on this station buys and consumes a range of technological goods. These goods can be picked up for free by the owner of the station. Attracts NPC traders."%_t,
+    scripts = {
+        {script = "data/scripts/entity/merchants/equipmentdock.lua"},
+        {script = "data/scripts/entity/merchants/SDKMerchTurretLocal1.lua"},  -- Allows Modded items
+        {script = "data/scripts/entity/merchants/SDKMerchTurretLocal2.lua"},  -- Allows Modded items
+        {script = "data/scripts/entity/merchants/SDKMerchTurretPDC.lua"},
+        {script = "data/scripts/entity/merchants/SDKMerchTurretPDL.lua"},
+        {script = "data/scripts/entity/merchants/SDKMerchTurretBolter.lua"},
+        {script = "data/scripts/entity/merchants/SDKMerchTurretPlasma.lua"},
+        {script = "data/scripts/entity/merchants/SDKMerchTurretPulseCannon.lua"},
+        {script = "data/scripts/entity/merchants/SDKMerchTurretRocket.lua"},
+        {script = "data/scripts/entity/merchants/SDKMerchTurretRailgun.lua"},
+        {script = "data/scripts/entity/merchants/SDKMerchTurretLightning.lua"},
+        {script = "data/scripts/entity/merchants/SDKMerchTurretCannon.lua"},
+        {script = "data/scripts/entity/merchants/fightermerchant.lua"},
+        {script = "data/scripts/entity/merchants/torpedomerchant.lua"},
+        {script = "data/scripts/entity/merchants/utilitymerchant.lua"},
+        {script = "data/scripts/entity/merchants/consumer.lua", args = {"Equipment Dock"%_t, unpack(ConsumerGoods.EquipmentDock())}},
+    },
+    getPrice = function()
+        return 25000000 +
+            StationFounder.calculateConsumerValue({"Equipment Dock"%_t, unpack(ConsumerGoods.EquipmentDock())})
+    end
 })
 
 

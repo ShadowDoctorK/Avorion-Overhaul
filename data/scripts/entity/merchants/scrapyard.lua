@@ -1,4 +1,10 @@
+--[[
+    Developer Note:
+    - Change this script to work with the SDKBackgroundSectorManager.lua to track wrecks that
+    are free to be destroyed in sectors where the core is to remain clear (more then just the scrapyard).
 
+    - Add wreckage highlighting
+]]
 function Scrapyard.Exempt(id)
     local Station = Entity()
     local Other = Entity(id)
@@ -44,6 +50,17 @@ function Scrapyard.AllianceMembers(id)
     return {Alliance(id):getMembers()}
 end
 
+-- Owner always has a license...
+function Scrapyard.hasLicense(factionIndex)
+
+    -- Owners & Alliance is exempt from the check.
+    if Scrapyard.Exempt(shootingCraftIndex) then 
+        return "Unlimited"
+    end
+
+    return licenses[factionIndex]
+end
+
 -- Replace the old function with the new one adding the sector level scrap spawning for the backgroud sim.
 Scrapyard.old_initializationFinished = Scrapyard.initializationFinished
 function Scrapyard.initializationFinished()
@@ -62,9 +79,9 @@ function Scrapyard.initializationFinished()
     end
 
     -- Adding this here so the Scrapyard extension will start spawning scrap AFTER the station is built.
-    if onServer() then
-        Sector():addScriptOnce("data/scripts/sector/SDKScrapyardExtension.lua")
-    end
+    --if onServer() then
+        --Sector():addScriptOnce("data/scripts/sector/SDKScrapyardExtension.lua")       -- Removed. The SDKBackgroundSectorManager.lua does this now.
+    --end
 
     -- This is dirty, adding it here till I get individual station types set up in the generator
     Entity():addScriptOnce("data/scripts/entity/merchants/SDKMerchSalvageTurret.lua")
@@ -78,6 +95,8 @@ function Scrapyard.onHullHit(objectIndex, block, shootingCraftIndex, damage, pos
     local sector = Sector()
     local shooter = sector:getEntity(shootingCraftIndex)
     if not shooter then return end
+
+    -- Don't count Alliance or the Owner
     if Scrapyard.Exempt(shootingCraftIndex) then return end
     
     local object = sector:getEntity(objectIndex)

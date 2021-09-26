@@ -151,5 +151,7 @@ end
 XsotanSwarm.old_spawnPrecursor =  XsotanSwarm.spawnPrecursor
 function XsotanSwarm.spawnPrecursor(position, scale) local _MethodName = GetName("Spwan Precursor")
     -- Use the loaded Designs or Generate if no Designs Exist
-    local boss = Xsotan.createProtoGuardian(nil, true) return boss
+    local boss = Xsotan.createProtoGuardian(nil, true) 
+    boss:addScript("icon.lua", "data/textures/icons/pixel/enemy-strength-indicators/skull.png")
+    return boss
 end

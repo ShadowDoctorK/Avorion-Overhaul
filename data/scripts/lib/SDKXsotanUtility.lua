@@ -10,7 +10,8 @@ local StyleGenerator = include ("internal/stylegenerator.lua")      -- Added to 
 local Log = include("SDKDebugLogging")
 
 local _Debug = 0
-local _Mod = "Xsotan Utility" function GetName(n)
+local _Mod = "Xsotan Utility" 
+local function GetName(n)
     return _Mod .. " - " .. n
 end
 

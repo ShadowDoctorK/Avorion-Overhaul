@@ -270,6 +270,7 @@ if onServer() then
         pos = MatrixLookUpPosition(-pos, vec3(0, 1, 0), pos)
 
         local boss = Sector():createShip(faction, "", _Plan, pos)
+        boss:addScript("icon.lua", "data/textures/icons/pixel/enemy-strength-indicators/skull.png")
 
         -- less shield for this boss
         local shield = Shield(boss.id)

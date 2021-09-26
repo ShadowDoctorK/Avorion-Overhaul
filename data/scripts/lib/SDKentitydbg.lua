@@ -1,3 +1,7 @@
+--[[
+    This is stored here so I can rename it and use it for developing purposes.
+]]
+
 function initUI()
 
     local res = getResolution()

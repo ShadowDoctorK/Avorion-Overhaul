@@ -161,6 +161,9 @@ function The4.createLaserTurret()
 end
 ]]
 
+local Volume = include("SDKGlobalDesigns - Volumes")
+local Equip = include("SDKGlobalDesigns - Equipment")
+
 -- Save Vanilla Function
 The4.old_createShip = The4.createShip 
 function The4.createShip(faction, position, volume, styleName)
@@ -168,16 +171,20 @@ function The4.createShip(faction, position, volume, styleName)
     --volume = volume or Balancing_GetSectorShipVolume(Sector():getCoordinates()) * Balancing_GetShipVolumeDeviation()
 
     -- Slot 13 to 15+ (Titans) Only
-    local Chances = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 250, 500, 750, 1000}
-
-    -- Get Volume Ranges
-    volume = PlanGenerator.GetShipVolume(Chances)
+    local Chances = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 250, 500, 700, 900}
 
     -- Override the Volume Passing Custom Volume
-    local plan = PlanGenerator.makeShipPlan(faction, volume, styleName, nil, true)
+    local o = PlanGenerator.GetOverride("Military", Volume.Ship(Chances))
+    local plan = PlanGenerator.Ship(faction, styleName, o)
 
     -- Vanilla Items Below
     local ship = Sector():createShip(faction, "", plan, position, EntityArrivalType.Jump)
+    ship:addScript("icon.lua", "data/textures/icons/pixel/enemy-strength-indicators/skull.png")
+
+    -- Give them some starting turrets on top of the rest of the turrets cause I hate the players...
+    local Armed, Defense = Equip.GetTurrets(ship, faction)
+    Equip.FactionTurret(ship, faction, Equip._Armed, Armed)        -- Armed Faction Turrets
+    Equip.FactionTurret(ship, faction, Equip._Defense, Defense)    -- Defense Faction Turrets
 
     ship.crew = ship.idealCrew
     ship.shieldDurability = ship.shieldMaxDurability

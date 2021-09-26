@@ -14,6 +14,9 @@ local SectorSpecifics = include ("sectorspecifics")
 JumperBoss = {}
 ]]
 
+local Volume = include("SDKGlobalDesigns - Volumes")
+local Equip = include("SDKGlobalDesigns - Equipment")
+
 -- Saved Vanilla Function
 JumperBoss.old_spawnBoss = JumperBoss.spawnBoss
 function JumperBoss.spawnBoss(x, y)
@@ -35,7 +38,7 @@ function JumperBoss.spawnBoss(x, y)
     local Chances = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 250, 500, 750, 1000}
 
     -- Get Volume Ranges
-    local volume = PlanGenerator.GetShipVolume(Chances)
+    local volume = Volume.Ship(Chances)
 
     -- Override the Volume Passing Custom Volume
     local plan = PlanGenerator.makeShipPlan(faction, volume, "Boss Fidget", nil, true)

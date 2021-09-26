@@ -25,13 +25,13 @@ function AddDefaultStationScripts(station)
     if station:hasScript("data/scripts/entity/merchants/resourcetrader.lua") then
         station:addScriptOnce("data/scripts/entity/merchants/SDKMerchMiningTurret.lua")
     end
+
     -- Scrapyard
     if station:hasScript("data/scripts/entity/merchants/scrapyard.lua") then
         station:addScriptOnce("data/scripts/entity/merchants/SDKMerchSalvageTurret.lua")
     end
 
     -- Scripts for all stations
-
     station:addScriptOnce("data/scripts/entity/startbuilding.lua")
     station:addScriptOnce("data/scripts/entity/entercraft.lua")
     station:addScriptOnce("data/scripts/entity/exitcraft.lua")
