@@ -7,13 +7,13 @@ function InsertStationData(station)
     end
 
     if index == -1 then 
-        print("Inserting Station: " .. tostring(station.name))
+        --print("Inserting Station: " .. tostring(station.name))
         index = #StationFounder.stations + 1 
     else
-        print("Overriding Station: " .. tostring(station.name))
+        --print("Overriding Station: " .. tostring(station.name))
     end
 
-    print("Index: " .. tostring(index))
+    --print("Index: " .. tostring(index))
     StationFounder.stations[index] = station
 end
 

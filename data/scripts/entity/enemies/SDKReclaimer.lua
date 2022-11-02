@@ -19,15 +19,15 @@ function Reclaimer.getAllowedSpawns()
     -- Adjust based on Difficulty
     local _Settings = GameSettings()
     if _Settings.difficulty == Difficulty.Insane then 
-        return _Base + 25
+        return _Base + 18
     elseif _Settings.difficulty == Difficulty.Hardcore then 
-        return _Base + 20
-    elseif _Settings.difficulty == Difficulty.Expert then 
         return _Base + 15
+    elseif _Settings.difficulty == Difficulty.Expert then 
+        return _Base + 12
     elseif _Settings.difficulty == Difficulty.Veteran then 
-        return _Base + 10
+        return _Base + 9
     elseif _Settings.difficulty == Difficulty.Normal then 
-        return _Base + 5
+        return _Base + 6
     elseif _Settings.difficulty == Difficulty.Easy then 
         return _Base
     end
@@ -72,11 +72,14 @@ if onServer() then
     end
 else
     function Reclaimer.getUpdateInterval()
-        return 0
+        return 0.25
     end
 end
 
 function Reclaimer.updateServer(timeStep)
+
+    if self.Spawns <= 0 then return end
+
     self.timeStep = self.getTimeStep()
 
     local entity = Entity()
@@ -84,7 +87,7 @@ function Reclaimer.updateServer(timeStep)
     if ShipAI(entity).isAttackingSomething then
         if self.getSpawnableMinions() > 0 and self.Spawns > 0 then
             self.spawnMinion()
-            self.timeStep = random():getFloat(2, 3)
+            --self.timeStep = random():getFloat(2, 3)
             self.Spawns = self.Spawns - 1
         end
     end

@@ -234,6 +234,7 @@ SDKGlobalDesigns.Forbidden = {
     "Pirate",
     "The Brotherhood",
     "The Xsotan",
+    "Xsotan",
     "The Cavalier",
     "The AI",    
 }

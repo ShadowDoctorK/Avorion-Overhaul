@@ -13,10 +13,5 @@
 --       Same goes for sector values.
 
 if onServer() then
-
-    local sector = Sector()
-
-    sector:addScriptOnce("sector/SDKBackgroundSectorManager.lua")
-    --sector:addScriptOnce("sector/SDKScrapyardExtension.lua")
-
+    Sector():addScriptOnce("sector/SDKBackgroundSectorManager.lua")
 end

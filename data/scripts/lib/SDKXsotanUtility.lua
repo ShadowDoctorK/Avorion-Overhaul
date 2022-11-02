@@ -253,7 +253,7 @@ function SDKXsotanUtility.Material()
 end
 
 function SDKXsotanUtility.Faction()
-    local name = "The Xsotan"%_T
+    local name = "Xsotan"%_T
 
     local galaxy = Galaxy()
     local faction = galaxy:findFaction(name)

@@ -15,6 +15,7 @@ local StyleGenerator = include ("internal/stylegenerator.lua")      -- Added to 
 local UpgradeGenerator = include ("upgradegenerator")
 local Plan = include("SDKUtilityBlockPlan")
 local Log = include("SDKDebugLogging")
+local Fac = include("SDKUtilityFaction")
 
 local Equip = include("SDKGlobalDesigns - Equipment")
 local Rand = include("SDKUtilityRandom")
@@ -276,29 +277,12 @@ function SDKXsotanGenerator.Material()
     return Material(getValueFromDistribution(_Prob))
 end
 
+-- Old Method. Retained till code scrub is finished.
+--[[
 function SDKXsotanGenerator.Faction()
-    local name = "The Xsotan"%_T
-
-    local galaxy = Galaxy()
-    local faction = galaxy:findFaction(name)
-    if faction == nil then
-        faction = galaxy:createFaction(name, 0, 0)
-        faction.initialRelations = -100000
-        faction.initialRelationsToPlayer = 0
-        faction.staticRelationsToPlayers = true
-
-        for trait, value in pairs(faction:getTraits()) do
-            faction:setTrait(trait, 0) -- completely neutral / unknown
-        end
-    end
-
-    faction.initialRelationsToPlayer = 0
-    faction.staticRelationsToPlayers = true
-    faction.homeSectorUnknown = true
-
-    return faction
-
+    return Fac.Xsotan()
 end
+]]
 
 --[[
     Function used to make the Xsotan go to war with all factions but the Player in 
@@ -307,7 +291,7 @@ end
 function SDKXsotanGenerator.HateAll()
     local _Galaxy = Galaxy()
     local _Sector = Sector()
-    local _Xsotan = SDKXsotanGenerator.Faction()
+    local _Xsotan = Fac.Xsotan()
 
     -- worsen relations to all present players and alliances
     local _Factions = {_Sector:getPresentFactions()}
@@ -662,7 +646,7 @@ if onServer() then
         local _Volume = random():getInt(_VolLow, _VolHigh)
         local _Prefix = SDKXsotanGenerator.GrowthPrefix(_Volume, _VolLow, _VolHigh)
         local _Material = SDKXsotanGenerator.Material()
-        local _Faction = SDKXsotanGenerator.Faction()
+        local _Faction = Fac.Xsotan()
     
         _Volume = SDKXsotanGenerator.DifficultyAdjustment(_Volume)
     
@@ -688,7 +672,7 @@ if onServer() then
     
         ShipUtility.addTurretsToCraft(_Ship, turret, 1)
     
-        _Ship:setTitle("${toughness}"%_T .. _Prefix .. "${name}"%_T, {toughness = "", name = _Name})
+        _Ship:setTitle("Xsotan: ${toughness}"%_T .. _Prefix .. "${name}"%_T, {toughness = "", name = _Name})
         _Ship.crew = _Ship.idealCrew
         _Ship.shieldDurability = _Ship.shieldMaxDurability
     
@@ -714,7 +698,7 @@ if onServer() then
         local _Volume = random():getInt(_VolLow, _VolHigh)
         local _Prefix = SDKXsotanGenerator.GrowthPrefix(_Volume, _VolLow, _VolHigh)
         local _Material = SDKXsotanGenerator.Material()
-        local _Faction = SDKXsotanGenerator.Faction()
+        local _Faction = Fac.Xsotan()
     
         _Volume = SDKXsotanGenerator.DifficultyAdjustment(_Volume)
     
@@ -736,9 +720,10 @@ if onServer() then
         local _Ship = Sector():createShip(_Faction, "", _Plan, _Position)
     
         -- Xsotan have random turrets     
-        ShipUtility.addTurretsToCraft(_Ship, SDKXsotanGenerator.LatcherTeslaTurret(), 4, 4)
+        ShipUtility.addTurretsToCraft(_Ship, SDKXsotanGenerator.LatcherPlasmaAttack(), 4, 4)
+        --ShipUtility.addTurretsToCraft(_Ship, SDKXsotanGenerator.LatcherForceTurret(), 4, 4)
     
-        _Ship:setTitle("${toughness}"%_T .. _Prefix .. "${name}"%_T, {toughness = "", name = _Name})
+        _Ship:setTitle("Xsotan: ${toughness}"%_T .. _Prefix .. "${name}"%_T, {toughness = "", name = _Name})
         _Ship.crew = _Ship.idealCrew
         _Ship.shieldDurability = _Ship.shieldMaxDurability
     
@@ -747,8 +732,8 @@ if onServer() then
         _Ship:addScriptOnce("ai/patrol.lua")
         _Ship:addScriptOnce("story/xsotanbehaviour.lua")
         _Ship:setValue("is_xsotan", 1)
-        _Ship:addAbsoluteBias(StatsBonuses.Velocity, 10000000.0)
-        _Ship:addAbsoluteBias(StatsBonuses.Acceleration, 250.0)
+        _Ship:addAbsoluteBias(StatsBonuses.Velocity, 50.0)
+        _Ship:addAbsoluteBias(StatsBonuses.Acceleration, 25.0)
     
         Boarding(_Ship).boardable = false
     
@@ -765,7 +750,7 @@ if onServer() then
         local _Volume = random():getInt(_VolLow, _VolHigh)
         local _Prefix = SDKXsotanGenerator.GrowthPrefix(_Volume, _VolLow, _VolHigh)
         local _Material = SDKXsotanGenerator.Material()
-        local _Faction = SDKXsotanGenerator.Faction()
+        local _Faction = Fac.Xsotan()
     
         _Volume = SDKXsotanGenerator.DifficultyAdjustment(_Volume)
     
@@ -791,7 +776,7 @@ if onServer() then
     
         ShipUtility.addTurretsToCraft(_Ship, turret, 1)
     
-        _Ship:setTitle("${toughness}"%_T .. _Prefix .. "${name}"%_T, {toughness = "", name = _Name})
+        _Ship:setTitle("Xsotan: ${toughness}"%_T .. _Prefix .. "${name}"%_T, {toughness = "", name = _Name})
         _Ship.crew = _Ship.idealCrew
         _Ship.shieldDurability = _Ship.shieldMaxDurability
     
@@ -816,7 +801,7 @@ if onServer() then
         local _Volume = random():getInt(_VolLow, _VolHigh)
         local _Prefix = SDKXsotanGenerator.GrowthPrefix(_Volume, _VolLow, _VolHigh)
         local _Material = SDKXsotanGenerator.Material()
-        local _Faction = SDKXsotanGenerator.Faction()
+        local _Faction = Fac.Xsotan()
     
         _Volume = SDKXsotanGenerator.DifficultyAdjustment(_Volume)
     
@@ -845,7 +830,7 @@ if onServer() then
     
         ShipUtility.addTurretsToCraft(_Ship, turret, numTurrets)
     
-        _Ship:setTitle("${toughness}"%_T .. _Prefix .. _Quantum .. "${name}"%_T, {toughness = "", name = _Name})
+        _Ship:setTitle("Xsotan: ${toughness}"%_T .. _Prefix .. _Quantum .. "${name}"%_T, {toughness = "", name = _Name})
         _Ship.crew = _Ship.idealCrew
         _Ship.shieldDurability = _Ship.shieldMaxDurability
     
@@ -871,7 +856,7 @@ if onServer() then
         local _Volume = random():getInt(_VolLow, _VolHigh)
         local _Prefix = SDKXsotanGenerator.GrowthPrefix(_Volume, _VolLow, _VolHigh)
         local _Material = SDKXsotanGenerator.Material()
-        local _Faction = SDKXsotanGenerator.Faction()
+        local _Faction = Fac.Xsotan()
     
         _Volume = SDKXsotanGenerator.DifficultyAdjustment(_Volume)
     
@@ -900,7 +885,7 @@ if onServer() then
         
         ShipUtility.addTurretsToCraft(_Ship, turret, numTurrets)
     
-        _Ship:setTitle("${toughness}"%_T .. _Prefix .. _Quantum .. "${name}"%_T, {toughness = "", name = _Name})
+        _Ship:setTitle("Xsotan: ${toughness}"%_T .. _Prefix .. _Quantum .. "${name}"%_T, {toughness = "", name = _Name})
         _Ship.crew = _Ship.idealCrew
         _Ship.shieldDurability = _Ship.shieldMaxDurability
     
@@ -927,7 +912,7 @@ if onServer() then
         local _Volume = random():getInt(_VolLow, _VolHigh)
         local _Prefix = SDKXsotanGenerator.GrowthPrefix(_Volume, _VolLow, _VolHigh)
         local _Material = SDKXsotanGenerator.Material()
-        local _Faction = SDKXsotanGenerator.Faction()
+        local _Faction = Fac.Xsotan()
     
         _Volume = SDKXsotanGenerator.DifficultyAdjustment(_Volume)
     
@@ -956,7 +941,7 @@ if onServer() then
     
         ShipUtility.addTurretsToCraft(_Ship, turret, numTurrets)
     
-        _Ship:setTitle("${toughness}"%_T .. _Prefix .. _Quantum .. "${name}"%_T, {toughness = "", name = _Name})
+        _Ship:setTitle("Xsotan: ${toughness}"%_T .. _Prefix .. _Quantum .. "${name}"%_T, {toughness = "", name = _Name})
         _Ship.crew = _Ship.idealCrew
         _Ship.shieldDurability = _Ship.shieldMaxDurability
     
@@ -982,7 +967,7 @@ if onServer() then
         local _Volume = random():getInt(_VolLow, _VolHigh)
         local _Prefix = SDKXsotanGenerator.GrowthPrefix(_Volume, _VolLow, _VolHigh)
         local _Material = SDKXsotanGenerator.Material()
-        local _Faction = SDKXsotanGenerator.Faction()
+        local _Faction = Fac.Xsotan()
     
         _Volume = SDKXsotanGenerator.DifficultyAdjustment(_Volume)
     
@@ -1011,7 +996,7 @@ if onServer() then
     
         ShipUtility.addTurretsToCraft(_Ship, turret, numTurrets)
     
-        _Ship:setTitle("${toughness}"%_T .. _Prefix .. _Quantum .. "${name}"%_T, {toughness = "", name = _Name})
+        _Ship:setTitle("Xsotan: ${toughness}"%_T .. _Prefix .. _Quantum .. "${name}"%_T, {toughness = "", name = _Name})
         _Ship.crew = _Ship.idealCrew
         _Ship.shieldDurability = _Ship.shieldMaxDurability
     
@@ -1037,7 +1022,7 @@ if onServer() then
         local _Volume = random():getInt(_VolLow, _VolHigh)
         local _Prefix = SDKXsotanGenerator.GrowthPrefix(_Volume, _VolLow, _VolHigh)
         local _Material = SDKXsotanGenerator.Material()
-        local _Faction = SDKXsotanGenerator.Faction()
+        local _Faction = Fac.Xsotan()
     
         _Volume = SDKXsotanGenerator.DifficultyAdjustment(_Volume)
     
@@ -1066,7 +1051,7 @@ if onServer() then
     
         ShipUtility.addTurretsToCraft(_Ship, turret, numTurrets)
     
-        _Ship:setTitle("${toughness}"%_T .. _Prefix .. _Quantum .. "${name}"%_T, {toughness = "", name = _Name})
+        _Ship:setTitle("Xsotan: ${toughness}"%_T .. _Prefix .. _Quantum .. "${name}"%_T, {toughness = "", name = _Name})
         _Ship.crew = _Ship.idealCrew
         _Ship.shieldDurability = _Ship.shieldMaxDurability
     
@@ -1094,7 +1079,7 @@ if onServer() then
         local _Volume = random():getInt(_VolLow, _VolHigh)
         local _Prefix = SDKXsotanGenerator.GrowthPrefix(_Volume, _VolLow, _VolHigh)
         local _Material = SDKXsotanGenerator.Material()
-        local _Faction = SDKXsotanGenerator.Faction()
+        local _Faction = Fac.Xsotan()
     
         _Volume = SDKXsotanGenerator.DifficultyAdjustment(_Volume)
     
@@ -1145,7 +1130,7 @@ if onServer() then
     
         ShipUtility.addTurretsToCraft(_Ship, turret, numTurrets)
     
-        _Ship:setTitle("${toughness}"%_T .. _Prefix .. _Quantum .. "${name}"%_T, {toughness = "", name = _Name})
+        _Ship:setTitle("Xsotan: ${toughness}"%_T .. _Prefix .. _Quantum .. "${name}"%_T, {toughness = "", name = _Name})
         _Ship.crew = _Ship.idealCrew
         _Ship.shieldDurability = _Ship.shieldMaxDurability
     
@@ -1172,7 +1157,7 @@ if onServer() then
         local _Volume = random():getInt(_VolLow, _VolHigh)
         local _Prefix = SDKXsotanGenerator.GrowthPrefix(_Volume, _VolLow, _VolHigh)
         local _Material = SDKXsotanGenerator.Material()
-        local _Faction = SDKXsotanGenerator.Faction()
+        local _Faction = Fac.Xsotan()
     
         if _OverrideAdjustment == false then
             _Volume = SDKXsotanGenerator.DifficultyAdjustment(_Volume)
@@ -1201,7 +1186,7 @@ if onServer() then
         Equip.CombatHanger(_Ship)                                   -- Add Fighters Wings
 
     
-        _Ship:setTitle("${toughness}"%_T .. _Prefix .. "${name}"%_T, {toughness = "", name = _Name})
+        _Ship:setTitle("Xsotan: ${toughness}"%_T .. _Prefix .. "${name}"%_T, {toughness = "", name = _Name})
         _Ship.crew = _Ship.idealCrew
         _Ship.shieldDurability = _Ship.shieldMaxDurability
     
@@ -1227,7 +1212,7 @@ if onServer() then
         local _VolHigh = SDKXsotanGenerator.VolumeShips[17] - 1
         local _Volume = random():getInt(_VolLow, _VolHigh)
         local _Material = Material(MaterialType.Avorion)        -- Avorion Always        
-        local _Faction = SDKXsotanGenerator.Faction()
+        local _Faction = Fac.Xsotan()
           
         local _Plan local _Table = SDKXsotanGenerator.PlansByClass("Proto-Guardian") if _Table then
             Plan.Pick(_Table)
@@ -1247,7 +1232,7 @@ if onServer() then
         Equip.CombatHanger(_Ship)                                   -- Add Fighters Wings
         ShipUtility.addBossAntiTorpedoEquipment(_Ship)
             
-        _Ship:setTitle("${toughness} ${name}"%_T, {toughness = "", name = "Wormhole Guardian Prototype"})    
+        _Ship:setTitle("Xsotan: ${toughness} ${name}"%_T, {toughness = "", name = "Wormhole Guardian Prototype"})    
         _Ship.crew = _Ship.idealCrew
         _Ship.shieldDurability = _Ship.shieldMaxDurability
     
@@ -1275,7 +1260,7 @@ if onServer() then
         local _VolHigh = SDKXsotanGenerator.VolumeShips[18]
         local _Volume = random():getInt(_VolLow, _VolHigh)
         local _Material = Material(MaterialType.Avorion)        -- Avorion Always
-        local _Faction = SDKXsotanGenerator.Faction()
+        local _Faction = Fac.Xsotan()
     
         local _Plan local _Table = SDKXsotanGenerator.PlansByClass("Guardian") if _Table then
             Plan.Pick(_Table)
@@ -1298,7 +1283,7 @@ if onServer() then
         Equip.CombatHanger(_Ship, 10)                          -- Add Fighters Wings      
         ShipUtility.addBossAntiTorpedoEquipment(_Ship)
     
-        _Ship:setTitle("${toughness} ${name}"%_T, {toughness = "", name = "Wormhole Guardian"})    
+        _Ship:setTitle("Xsotan: ${toughness} ${name}"%_T, {toughness = "", name = "Wormhole Guardian"})    
         _Ship.shieldDurability = _Ship.shieldMaxDurability
     
         local upgrades =
@@ -1360,10 +1345,10 @@ if onServer() then
         local weapons = {turret:getWeapons()}
         turret:clearWeapons()
 
-        local dmg = Rand.Int(2000, 4000)
+        local dmg = Rand.Int(2600, 4000)
         local rng = Rand.Int(1500, 2500)
         local rat = Rand.Float(2, 5)
-        local psz = Rand.Float(2, 5)
+        local psz = Rand.Float(2, 3.5)
         local ofc = Rand.Float(15, 30)
         local pen = Rand.Float(0.2, 0.5)
         local sdm = Rand.Float(1.2, 1.6)
@@ -1372,22 +1357,24 @@ if onServer() then
         for _, weapon in pairs(weapons) do
             weapon.damageType = DamageType.AntiMatter
             
-            if weapon.damage < 2000 then
+            if weapon.damage < 2600 then
                 weapon.damage = dmg / #weapons
             end
 
+            weapon.accuracy = 0.45
+            weapon.deathExplosion = true
             weapon.fireRate = rat
             weapon.reach = rng
             weapon.pmaximumTime = weapon.reach / weapon.pvelocity
             weapon.pcolor = Material(6).color
             weapon.psize = psz
             weapon.seeker = true
-            weapon.otherForce = ofc
+            --weapon.otherForce = ofc
             weapon.shieldPenetration = pen
             weapon.shieldDamageMultiplier = sdm
             weapon.impactParticles = ImpactParticles.Energy
             weapon.blockPenetration = blk
-            weapon.name = "Guardian Nanite Assult System /* Weapon Name*/"%_t
+            weapon.name = "Nanite Assult System /* Weapon Name*/"%_t
             weapon.prefix = "Xsotan /* Weapon Prefix*/"%_t
             turret:addWeapon(weapon)
         end
@@ -1400,45 +1387,95 @@ if onServer() then
         return turret
     end
 
-        -- Nanite Swarm
-        function SDKXsotanGenerator.GuardianPlasmaDefense()
-            local turret = SectorTurretGenerator(Seed(150)):generate(0, 0, 0, Rarity(RarityType.Exceptional), WeaponType.PlasmaGun)
-            local weapons = {turret:getWeapons()}
-            turret:clearWeapons()
+    -- Nanite Swarm
+    function SDKXsotanGenerator.GuardianPlasmaDefense()
+        local turret = SectorTurretGenerator(Seed(150)):generate(0, 0, 0, Rarity(RarityType.Exceptional), WeaponType.PlasmaGun)
+        local weapons = {turret:getWeapons()}
+        turret:clearWeapons()
 
-            local rat = Rand.Float(2, 5)
-            local psz = Rand.Float(2, 5)
-            local ofc = Rand.Float(15, 30)
-            local pen = Rand.Float(0.2, 0.5)
-            local sdm = Rand.Float(1.2, 1.6)
-            local blk = Rand.Int(5, 11)
+        local rat = Rand.Float(2, 5)
+        local psz = Rand.Float(2, 3.5)
+        local ofc = Rand.Float(15, 30)
+        local pen = Rand.Float(0.2, 0.5)
+        local sdm = Rand.Float(1.2, 1.6)
+        local blk = Rand.Int(5, 11)
 
-            for _, weapon in pairs(weapons) do
-                weapon.damageType = DamageType.Fragments
-                weapon.damage = 45 / #weapons
-                weapon.fireRate = rat
-                weapon.reach = 1500
-                weapon.pmaximumTime = weapon.reach / weapon.pvelocity
-                weapon.pcolor = Material(6).color
-                weapon.psize = psz
-                weapon.seeker = true
-                weapon.otherForce = ofc
-                weapon.shieldPenetration = pen
-                weapon.shieldDamageMultiplier = sdm
-                weapon.impactParticles = ImpactParticles.Energy
-                weapon.blockPenetration = blk
-                weapon.name = "Guardian Nanite Defense System /* Weapon Name*/"%_t
-                weapon.prefix = "Xsotan /* Weapon Prefix*/"%_t
-                turret:addWeapon(weapon)
-            end
-    
-            turret.title = "Xsotan Nanite Defense System"
-            turret.crew = Crew()
-            turret.turningSpeed = 3.0
-            turret:updateStaticStats()
-    
-            return turret
+        for _, weapon in pairs(weapons) do
+            weapon.damageType = DamageType.Fragments
+            weapon.damage = 45 / #weapons
+
+            weapon.accuracy = 0.75
+            weapon.deathExplosion = true
+            weapon.fireRate = rat
+            weapon.reach = 1500
+            weapon.pmaximumTime = weapon.reach / weapon.pvelocity
+            weapon.pcolor = Material(6).color
+            weapon.psize = psz
+            weapon.seeker = true
+            --weapon.otherForce = ofc
+            weapon.shieldPenetration = pen
+            weapon.shieldDamageMultiplier = sdm
+            weapon.impactParticles = ImpactParticles.Energy
+            weapon.blockPenetration = blk
+            weapon.name = "Nanite Defense System /* Weapon Name*/"%_t
+            weapon.prefix = "Xsotan /* Weapon Prefix*/"%_t
+            turret:addWeapon(weapon)
         end
+
+        turret.title = "Xsotan Nanite Defense System"
+        turret.crew = Crew()
+        turret.turningSpeed = 3.0
+        turret:updateStaticStats()
+
+        return turret
+    end
+
+    -- Nanite Swarm
+    function SDKXsotanGenerator.LatcherPlasmaAttack()
+        local turret = SectorTurretGenerator(Seed(150)):generate(0, 0, 0, Rarity(RarityType.Exceptional), WeaponType.PlasmaGun)
+        local weapons = {turret:getWeapons()}
+        turret:clearWeapons()
+
+        local dmg = Rand.Int(1200, 2400)
+        local rng = Rand.Int(250, 450)
+        local rat = Rand.Float(2, 5)
+        local psz = Rand.Float(0.75, 1.25)
+        local ofc = 300000000
+        local sdm = Rand.Float(2.2, 2.6)
+        local blk = Rand.Int(5, 11)
+
+        for _, weapon in pairs(weapons) do
+            weapon.damageType = DamageType.Plasma
+            
+            if weapon.damage < 2600 then
+                weapon.damage = dmg / #weapons
+            end
+
+            weapon.accuracy = 0.45
+            weapon.deathExplosion = true
+            weapon.fireRate = rat
+            weapon.reach = rng
+            weapon.pmaximumTime = weapon.reach / weapon.pvelocity
+            weapon.pcolor = Material(3).color
+            weapon.psize = psz
+            weapon.seeker = true
+            --weapon.selfForce = -ofc
+            weapon.shieldDamageMultiplier = sdm
+            weapon.hullDamageMultiplier = 0
+            weapon.impactParticles = ImpactParticles.Energy
+            weapon.blockPenetration = blk
+            weapon.name = "Nanite Assult System /* Weapon Name*/"%_t
+            weapon.prefix = "Xsotan /* Weapon Prefix*/"%_t
+            turret:addWeapon(weapon)
+        end
+
+        turret.title = "Xsotan Nanite Assult System"
+        turret.crew = Crew()
+        turret.turningSpeed = 3.0
+        turret:updateStaticStats()
+
+        return turret
+    end
 
     function SDKXsotanGenerator.PlasmaTurret(_Rarity)
         local _Rarity = _Rarity or SDKXsotanGenerator.RandomRarity()
@@ -1497,7 +1534,7 @@ if onServer() then
         local weapons = {turret:getWeapons()}
         turret:clearWeapons()
         for _, weapon in pairs(weapons) do
-            weapon.reach = 200
+            weapon.reach = 400
             turret:addWeapon(weapon)
         end
     
@@ -1508,25 +1545,45 @@ if onServer() then
     end
     
     function SDKXsotanGenerator.LatcherForceTurret()
-        local _Rarity = _Rarity or SDKXsotanGenerator.RandomRarity(_Rarity)
-        local turret = SectorTurretGenerator(Seed(153)):generate(0, 0, 0, Rarity(_Rarity), WeaponType.ForceGun)
+
+        local turret = SectorTurretGenerator(Seed(150)):generate(0, 0, 0, Rarity(RarityType.Exceptional), WeaponType.ForceGun)
         local weapons = {turret:getWeapons()}
         turret:clearWeapons()
+
+        local rng = Rand.Int(650, 800)
+        local ofc = 5000000
+        local sdm = Rand.Float(2.2, 2.6)
+        local blk = Rand.Int(5, 11)
+
         for _, weapon in pairs(weapons) do
-            weapon.reach = 200
-            weapon.banimationSpeed = -1
-            weapon.selfForce = -50000000
-            weapon.otherForce = 0
+            weapon.reach = rng
+            weapon.banimationSpeed = 0.1
+            weapon.selfForce = -ofc
+            weapon.otherForce = -ofc
             weapon.bshape = BeamShape.Swirly
             weapon.bshapeSize = 1.25
+            weapon.bauraWidth = 0.85
+            weapon.binnerColor = Material(4).color
+            weapon.bouterColor = Material(6).color
+            weapon.blength = rng	            
+            weapon.bwidth = 0.75
+            weapon.continuousBeam = true
+
+            weapon.name = "Force Manipulation System /* Weapon Name*/"%_t
+            weapon.prefix = "Xsotan /* Weapon Prefix*/"%_t
+            
             turret:addWeapon(weapon)
         end
-    
-        turret.coaxial = true
-        turret.turningSpeed = 3.0
+
+        turret.title = "Xsotan Force Manipulation System"
+        turret.size = 1
+        turret.automatic = true
         turret.crew = Crew()
+        turret.turningSpeed = 3.0
+        turret:updateStaticStats()
     
         return turret
+
     end
 
 end -- if onServer then

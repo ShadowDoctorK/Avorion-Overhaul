@@ -163,8 +163,8 @@ function SDKEquipment.FactionTurret(target, fac, type, num) local MethodName = s
             if v.damageType ~= DamageType.Fragments then
                  table.insert(Armed, v)                                     -- Check for Armed
             else table.insert(Defense, v) end end                           -- Check for Defense
-        if v.hullRepairRate > 0 then table.insert(Reapir, v) end            -- Check for Hull Repair
-        if v.shieldRepairRate > 0 then table.insert(Reapir, v) end          -- Check for Shield Repair
+        if v.hullRepairRate > 0 then table.insert(Repair, v) end            -- Check for Hull Repair
+        if v.shieldRepairRate > 0 then table.insert(Repair, v) end          -- Check for Shield Repair
         if v.stoneRawEfficiency > 0 then table.insert(Miner, v) end         -- Check for Miner
         if v.stoneRefinedEfficiency > 0 then table.insert(Miner, v) end     -- Check for R-Miner
         if v.metalRawEfficiency > 0 then table.insert(Salvager, v) end      -- Check for Salvager

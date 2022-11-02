@@ -1,6 +1,7 @@
 package.path = package.path .. ";data/scripts/lib/?.lua"
 package.path = package.path .. ";data/scripts/?.lua"
 
+local ShipGenerator = include("shipgenerator")
 local SectorGenerator = include ("SectorGenerator")
 local ShipUtility = include("shiputility")
 local Placer = include("placer")

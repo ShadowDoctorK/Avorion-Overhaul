@@ -475,39 +475,40 @@ function PlanGenerator.ShipAsync(cb, v, fac, sn, s, o) local _MethodName = self.
     -- "Military" can be received when any military type ship will do.
     if not sn or sn == "Military" then sn = Volume.MilitaryClass(vl) end
 
-    if o.volume then vl = o.volume end
-    if o.material then mt = o.material end
-    if o.style then sn = o.stlye end
-
+    if o.style then sn = o.style end
+    
     if Class.IsMilitary(sn) then 
         code = self.CodeMilitary()
         vl = Volume.Ship() 
-
+        
     elseif sn == Class.Carrier then 
         code = self.CodeCarrier()
         vl = Volume.Carrier() 
-
+        
     elseif sn == Class.Miner then 
         code = self.CodeMiner()
         vl = Volume.Ship() 
-
+        
     elseif sn == Class.Freighter then 
         code = self.CodeFreighter()
         vl = Volume.Ship() 
-
+        
     elseif sn == Class.Salvager then 
         code = self.CodeSalvager()
         vl = Volume.Ship() 
-
+        
     elseif sn == Class.Civilian then 
         code = self.CodeCivilian()
         vl = Volume.Civilian() 
-
+        
     elseif sn == Class.CrewTransport then 
         code = self.CodeCrewTransport()
         vl = Volume.Ship() 
-
+        
     end
+    
+    if o.volume then vl = o.volume end
+    if o.material then mt = o.material end
 
     if s then
         return execute(code, sn, sd, vl, mt, fac.index)
